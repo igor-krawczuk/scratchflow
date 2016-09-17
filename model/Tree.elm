@@ -16,6 +16,7 @@ type alias Node = {
     outputs : Array.Array (Maybe Int)
 }
 
+-- Node supposed to raise an error in bindNodes (no to be used in practice)
 dummyNode : Node
 dummyNode = {
     id = 0,
@@ -35,6 +36,7 @@ type NodeType = Input String TensorType | Output |
 nbInputs : NodeType -> Int
 nbInputs nodeType = Array.length (inputTypes nodeType)
 
+-- Input types of operations, defines the size of the input list of the node as well
 inputTypes : NodeType -> Array TensorType
 inputTypes nodeType = 
     case nodeType of
@@ -63,6 +65,7 @@ inputTypes nodeType =
 nbOutputs : NodeType -> Int
 nbOutputs nodeType = Array.length (outputTypes nodeType)
 
+-- Output types of operations, defines the size of the output list of the node as well
 outputTypes : NodeType -> Array TensorType
 outputTypes nodeType =
     case nodeType of
@@ -88,6 +91,7 @@ outputTypes nodeType =
         ReduceSum _ -> Array.fromList [NumberTensor]
         TrainGDOMinimize _ -> Array.fromList[AnyTensor]
 
+-- Checks if type1 can be passed as an argument of type2
 compatibleTypes : TensorType -> TensorType -> Bool
 compatibleTypes type1 type2 = case type1 of
     NumberTensor -> type2 == NumberTensor || type2 == IntTensor || type2 == FloatTensor || type2 == AnyTensor
@@ -97,6 +101,7 @@ compatibleTypes type1 type2 = case type1 of
     NoTensor -> False
     _ -> type2 == type1 || type2 == AnyTensor
 
+-- Create an edge between two nodes on designated in/outgoing points
 bindNodes : (Int, Int) -> (Int, Int) -> Tree -> Maybe Tree
 bindNodes (nodeId1, id1) (nodeId2, id2) tree = let
         node1 = case List.head (List.filter (\x -> x.id == nodeId1) tree.nodes) of
@@ -134,6 +139,8 @@ unbindNodes (node1, id1) (node2, id2) tree = let
 newTree : Tree
 newTree = { nodes = [] }
 
+-- Adds a node with the given ID (have to generate all different IDs elsewhere). Returns the modified tree
+-- Attention : IDs have to start with 1 ! (0 is error value)
 addNode : NodeType -> Int -> Tree -> Tree
 addNode nodeType nodeId tree = { tree | nodes = List.append tree.nodes [{
         id = nodeId,

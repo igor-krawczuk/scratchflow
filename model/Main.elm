@@ -7,7 +7,7 @@ import Tree exposing (..)
 import Crawl exposing (..)
 
 main = let
-    {-
+    {- Full tree structure
     tree = {
         nodes = [
             {
@@ -37,7 +37,9 @@ main = let
         ]
     }
     -}
-    tree = newTree
+
+    -- Step 1 : create the nodes
+    basetree = newTree
      |> addNode (Constant (Vector [0, 784])) 1
      |> addNode (Input "x" FloatTensor) 2
      |> addNode (Constant (Vector [784, 10])) 3
@@ -51,6 +53,7 @@ main = let
      |> addNode (SoftMax) 11
      |> addNode (Constant (Vector [0, 10])) 12
      |> addNode (Input "y_" FloatTensor) 13
+    tree1 = basetree
      |> addNode (Log) 14
      |> addNode (Mul) 15
      |> addNode (ReduceSum [1]) 16
@@ -58,9 +61,16 @@ main = let
      |> addNode (ReduceMean) 18
      |> addNode (TrainGDOMinimize 0.5) 19
      |> addNode (Output) 20
+    tree2 = basetree
+     |> addNode (Argmax 1) 21
+     |> addNode (Argmax 1) 22
+     |> addNode (Equal) 23
+     |> addNode (Cast FloatTensor) 24
+     |> addNode (ReduceMean) 25
+     |> addNode (Output) 26
 
-     --|> toString
-    graph = Just tree
+    -- Step 2 : Link the nodes
+    baseGraph tr = Just tr
         -- x = tf.placeholder(tf.float32, [None, 784])
         `andThen` (\t -> bindNodes (1,0) (2,0) t)        
         -- W = tf.Variable(tf.zeros([784, 10]))
@@ -76,7 +86,8 @@ main = let
         `andThen` (\t -> bindNodes (8,0) (10,1) t)
         `andThen` (\t -> bindNodes (10,0) (11,0) t)
         -- y_ = tf.placeholder(tf.float32, [None, 10])
-        `andThen` (\t -> bindNodes (12,0) (13,0) t)                
+        `andThen` (\t -> bindNodes (12,0) (13,0) t)
+    graph1 = baseGraph tree1
         -- cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
         `andThen` (\t -> bindNodes (11,0) (14,0) t)
         `andThen` (\t -> bindNodes (14,0) (15,0) t)
@@ -87,10 +98,25 @@ main = let
         -- train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
         `andThen` (\t -> bindNodes (18,0) (19,0) t)
         `andThen` (\t -> bindNodes (19,0) (20,0) t)
+    graph2 = baseGraph tree2
+        -- correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+        `andThen` (\t -> bindNodes (11,0) (21,0) t)
+        `andThen` (\t -> bindNodes (13,0) (22,0) t)
+        `andThen` (\t -> bindNodes (21,0) (23,0) t)
+        `andThen` (\t -> bindNodes (22,0) (23,1) t)
+        -- accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        `andThen` (\t -> bindNodes (23,0) (24,0) t)
+        `andThen` (\t -> bindNodes (24,0) (25,0) t)
+        `andThen` (\t -> bindNodes (25,0) (26,0) t)
 
-    code = case graph of
+    -- Step 3 : Crawl the graph to get the code
+    code1 = case graph1 of
         Just c -> crawl c
         Nothing -> ""
-     --|> toString
-    in Html.textarea [Html.Attributes.cols 80, Html.Attributes.rows 25] [Html.text code]
-    --in Html.textarea [Html.Attributes.cols 80, Html.Attributes.rows 25] [Html.text (toString graph)]
+    code2 = case graph2 of
+        Just c -> crawl c
+        Nothing -> ""
+    in Html.div [] [
+        Html.textarea [Html.Attributes.cols 80, Html.Attributes.rows 25] [Html.text code1],
+        Html.textarea [Html.Attributes.cols 80, Html.Attributes.rows 25] [Html.text code2]
+    ]

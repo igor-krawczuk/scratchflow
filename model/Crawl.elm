@@ -7,6 +7,8 @@ import Maybe
 
 import Tree exposing (..)
 
+-- Main tree transformation function (code is concatenated if multiple outputs are here)
+-- (Note : Nodes with multiple children will be put twice in the code)
 crawl : Tree -> String
 crawl tree = let
     outputNodes = List.filter (\node -> case node.nodeType of 
@@ -17,6 +19,7 @@ crawl tree = let
             generateCode node tree
         ) outputNodes)
 
+-- Recursive function going through the tree from the output
 generateCode : Node -> Tree -> String
 generateCode node tree = let
     prev = Array.foldl (++) "" (Array.map (\nodeId ->
@@ -31,12 +34,14 @@ generateCode node tree = let
 findNode : Int -> Tree -> Maybe Node
 findNode id tree = List.head (List.filter (\node -> node.id == id) tree.nodes)
 
+-- Index 0 means error (node indexes begin at 1)
 unwrap : Array.Array (Maybe Int) -> Array.Array Int
 unwrap array = Array.map (\x -> case x of
         Just val -> val
         Nothing -> 0
     ) array
 
+-- Returns the line of python code equivalent to the operation
 actualCode : NodeType -> Int -> Array.Array Int -> Array.Array Int -> String
 actualCode nodeType nodeId inputs outputs = case nodeType of
     Input name t -> name ++ " = tf.placeholder(" ++ (displayTensorType t) ++ ")\n"
