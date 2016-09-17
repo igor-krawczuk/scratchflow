@@ -65,8 +65,15 @@ subscriptions model = case model.selNode of
 handleSelNode:GraphicalNode.Msg-> Model->(Model,Cmd Msg, Maybe OutMsg)
 handleSelNode gnmsg model=
         case gnmsg of 
-            GraphicalNode.ReleasedAt x y n ->  checkNodeRelease x y  model
-            _-> case model.selNode of
+        GraphicalNode.ReleasedAt x y n ->  checkNodeRelease x y  model
+        GraphicalNode.DragStart pos id-> forwardMsg gnmsg model
+        GraphicalNode.DragAt pos id-> forwardMsg gnmsg model
+        GraphicalNode.DragEnd pos id-> forwardMsg gnmsg model
+        GraphicalNode.SetParent par id-> forwardMsg gnmsg model
+            
+forwardMsg:GraphicalNode.Msg->Model->(Model,Cmd Msg,Maybe OutMsg)
+forwardMsg gnmsg model=
+            case model.selNode of
                     Just node -> let
                                     (newslm,slncm)=GraphicalNode.update gnmsg node
                                 in 
@@ -82,7 +89,7 @@ checkNodeRelease x y model =
 
 -- HELPERS
 makeNode:GraphicalNode.Model
-makeNode=(GraphicalNode.Model (Position 0 0) Nothing  "selector")
+makeNode=(GraphicalNode.Model (Position 0 0) Nothing  "selector" 0)
 
 optionSpawn : Attribute Msg
 optionSpawn =

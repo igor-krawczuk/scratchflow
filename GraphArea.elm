@@ -25,20 +25,38 @@ type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int}
 
 view : Model -> Html Msg
 view model =
-    div [style (graphAreaStyle model.offset)]
+    div [optionSpawn,style (graphAreaStyle model.offset)]
     ([text "Grapharea"]++(List.map (\n -> renderNode n) (Dict.values model.nodes)))
 
 update: Msg->Model-> (Model, Cmd Msg, Maybe OutMsg)
 update msg model=
     case msg of
         ChangeOffset w -> ({model|offset = w},Cmd.none, Nothing)
-        NodeUpdate newnodemodel -> (model,Cmd.none, Nothing)
+        NodeUpdate newnodemodel -> handleNodeUpdate model newnodemodel
         AddNode newnode -> ((addNode model newnode), Cmd.none,Just NodeReceived)
+
+handleNodeUpdate:Model->GraphicalNode.Msg->(Model,Cmd Msg,Maybe OutMsg)
+handleNodeUpdate model gnmsg=
+    case gnmsg of
+    GraphicalNode.DragStart pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
+    GraphicalNode.DragAt pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
+    GraphicalNode.DragEnd pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
+    GraphicalNode.SetParent par node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
+    GraphicalNode.ReleasedAt x y n->forwardMsg gnmsg (Dict.get n.id model.nodes) model
+
+forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
+forwardMsg gnmsg may_node model=
+    case may_node of 
+        Nothing -> (model,Cmd.none, Nothing)
+        Just node -> let (newslm,slncm)=GraphicalNode.update gnmsg node in
+                      let newnodes=(Dict.insert node.id newslm model.nodes) in 
+                                       ({model | nodes = newnodes},Cmd.map NodeUpdate slncm,Nothing)
 
 addNode:Model->GraphicalNode.Model->Model
 addNode model nn=
     let newid=model.id+1 in 
-    let newnodes=(Dict.insert newid nn model.nodes) in
+    let ni={nn|id=newid} in
+    let newnodes=(Dict.insert newid ni model.nodes) in
             {model|nodes=newnodes,id=newid}
 
 renderNode:GraphicalNode.Model-> Html Msg
@@ -57,3 +75,9 @@ graphAreaStyle offset =[
     ("width","100%")
     ]
 
+optionSpawn : Attribute Msg
+optionSpawn =
+  Html.Events.onClick (AddNode makeNode)
+
+makeNode:GraphicalNode.Model
+makeNode=(GraphicalNode.Model (Position 5 10) Nothing  "graphc:" 0)

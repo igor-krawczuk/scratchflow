@@ -12,9 +12,10 @@ import Task
 
 
 type alias Model =
-    { position : Position
-    , drag : Maybe Drag,
-    parent:String
+    { position : Position,
+     drag : Maybe Drag,
+        parent:String,
+        id:Int
     }
 
 
@@ -28,11 +29,11 @@ type alias Drag =
 
 
 type Msg
-    = DragStart Position
-    | DragAt Position
-    | DragEnd Position
+    = DragStart Position Int
+    | DragAt Position Int
+    | DragEnd Position Int
     | ReleasedAt Int Int Model
-    | SetParent String
+    | SetParent String Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -41,21 +42,21 @@ update msg model =
 
 
 updateHelp : Msg -> Model -> Model
-updateHelp msg ({position, drag} as model) =
+updateHelp msg ({position, drag,parent,id} as model) =
   case msg of
-    DragStart xy ->
-      Model position (Just (Drag xy xy)) model.parent
+    DragStart xy id->
+      Model position (Just (Drag xy xy)) parent id
 
-    DragAt xy ->
-      Model position (Maybe.map (\{start} -> Drag start xy) drag) model.parent
+    DragAt xy id->
+      Model position (Maybe.map (\{start} -> Drag start xy) drag) parent id
 
-    DragEnd p ->
-      let newmodel =Model (getPosition model) Nothing model.parent in
+    DragEnd p id->
+      let newmodel =Model (getPosition model) Nothing parent id in
             let pos = getPosition model in
                       let (nm2,cm) =update (ReleasedAt pos.x pos.y newmodel) newmodel in
                                                                                 nm2
     ReleasedAt x y n -> model
-    SetParent p -> {model|parent=p}
+    SetParent p id-> {model|parent=p}
 
 
 
@@ -69,7 +70,7 @@ subscriptions model =
       Sub.none
 
     Just _ ->
-      Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
+      Sub.batch [ Mouse.moves (\p ->DragAt  p model.id) , Mouse.ups (\p -> DragEnd p model.id)]
 
 
 
@@ -99,7 +100,7 @@ view model =
     in
                div 
                [
-                   onMouseDown
+                   onMouseDown model.id
                    , style
                    [ "background-color" => color--"#3C8D2F"
                    , "cursor" => "move"
@@ -139,9 +140,9 @@ getPosition {position, drag} =
         (position.y + current.y - start.y)
 
 
-onMouseDown : Attribute Msg
-onMouseDown =
-  on "mousedown" (Json.map DragStart Mouse.position)
+onMouseDown : Int->Attribute Msg
+onMouseDown id =
+  on "mousedown" (Json.map (\p->DragStart p id) Mouse.position )
 
 ---plan
 --- write update/model/view architecture for node generation
