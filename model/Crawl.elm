@@ -9,6 +9,7 @@ import Tree exposing (..)
 
 -- Main tree transformation function (code is concatenated if multiple outputs are here)
 -- (Note : Nodes with multiple children will be put twice in the code)
+-- A cycle in the graph will create infinite loops !!!
 crawl : Tree -> String
 crawl tree = let
     outputNodes = List.filter (\node -> case node.nodeType of 

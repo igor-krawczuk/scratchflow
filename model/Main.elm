@@ -6,8 +6,11 @@ import Maybe exposing (andThen)
 import Tree exposing (..)
 import Crawl exposing (..)
 
+-- This creates two trees, with some common elements
+-- Tree1 is the training tree
+-- Tree2 is the verification tree
 main = let
-    {- Full tree structure
+    {- Full tree structure (example)
     tree = {
         nodes = [
             {
