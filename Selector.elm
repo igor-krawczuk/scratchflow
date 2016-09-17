@@ -29,7 +29,9 @@ selectorStyle: Int -> List (String,String)
 selectorStyle width = [
     ("width", (toString width ) ++"px"),
     ("float", "left"),
-    ("background-color","red")
+    ("background-color","red"),
+    ("border-right","thick solid black"),
+    ("height","100%")
     ]
 listStyle = [("","")]
 optionstyle= [("","")]
@@ -65,7 +67,6 @@ subscriptions model = case model.selNode of
 handleSelNode:GraphicalNode.Msg-> Model->(Model,Cmd Msg, Maybe OutMsg)
 handleSelNode gnmsg model=
         case gnmsg of 
-        GraphicalNode.ReleasedAt x y n ->  checkNodeRelease x y  model
         GraphicalNode.DragStart pos id-> forwardMsg gnmsg model
         GraphicalNode.DragAt pos id-> forwardMsg gnmsg model
         GraphicalNode.DragEnd pos id-> forwardMsg gnmsg model
@@ -75,17 +76,19 @@ forwardMsg:GraphicalNode.Msg->Model->(Model,Cmd Msg,Maybe OutMsg)
 forwardMsg gnmsg model=
             case model.selNode of
                     Just node -> let
-                                    (newslm,slncm)=GraphicalNode.update gnmsg node
+                                    (newslm,slncm, gomsg)=GraphicalNode.update gnmsg node
                                 in 
-                                   ({model | selNode = Just newslm},Cmd.map SelNodeUpdate slncm,Nothing)
+                                   case gomsg of
+                                       Just (GraphicalNode.ReleasedAt x y id) ->checkNodeRelease x y id model
+                                       Nothing->({model | selNode = Just newslm},Cmd.map SelNodeUpdate slncm,Nothing)
                     Nothing -> (model,Cmd.none, Nothing ) --check how this couzld happen..
 
-checkNodeRelease:Int->Int->Model->(Model,Cmd Msg,Maybe OutMsg)
-checkNodeRelease x y model =
+checkNodeRelease:Int->Int->Int->Model->(Model,Cmd Msg,Maybe OutMsg)
+checkNodeRelease x y id model =
        if x < model.width then (model,Cmd.none,Nothing) else
           case model.selNode of
                         Nothing -> (model,Cmd.none,Nothing)--check how this could be
-                        Just nn -> (model,Cmd.none,Just (SendNode nn))
+                        Just nn -> ({model | selNode = Nothing},Cmd.none,Just (SendNode nn))
 
 -- HELPERS
 makeNode:GraphicalNode.Model

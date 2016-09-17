@@ -10,7 +10,7 @@ import Mouse exposing (Position)
 import Task
 import Dict
 
-
+import Debug exposing (..)
 -- IMPORT MYMODULES
 import GraphicalNode
 
@@ -25,8 +25,8 @@ type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int}
 
 view : Model -> Html Msg
 view model =
-    div [optionSpawn,style (graphAreaStyle model.offset)]
-    ([text "Grapharea"]++(List.map (\n -> renderNode n) (Dict.values model.nodes)))
+    div [style (graphAreaStyle model.offset)]
+    ([div[optionSpawn][text "Grapharea"]]++(List.map (\n -> renderNode n) (Dict.values model.nodes)))
 
 update: Msg->Model-> (Model, Cmd Msg, Maybe OutMsg)
 update msg model=
@@ -42,22 +42,23 @@ handleNodeUpdate model gnmsg=
     GraphicalNode.DragAt pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragEnd pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.SetParent par node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
-    GraphicalNode.ReleasedAt x y n->forwardMsg gnmsg (Dict.get n.id model.nodes) model
 
 forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
 forwardMsg gnmsg may_node model=
     case may_node of 
         Nothing -> (model,Cmd.none, Nothing)
-        Just node -> let (newslm,slncm)=GraphicalNode.update gnmsg node in
+        Just node -> let (newslm,slncm, gomsg)=GraphicalNode.update gnmsg node in
                       let newnodes=(Dict.insert node.id newslm model.nodes) in 
                                        ({model | nodes = newnodes},Cmd.map NodeUpdate slncm,Nothing)
 
 addNode:Model->GraphicalNode.Model->Model
 addNode model nn=
-    let newid=model.id+1 in 
-    let ni={nn|id=newid} in
-    let newnodes=(Dict.insert newid ni model.nodes) in
-            {model|nodes=newnodes,id=newid}
+    let newid=model.id+1 
+        pos = GraphicalNode.getPosition nn
+                in 
+    let ni=(Debug.log"grapharea added" {nn|id=newid, parent="graph", position=pos, drag=Nothing}) in
+    let newnodes=(Debug.log "grapharea newdict" (Dict.insert newid ni model.nodes)) in
+            {model|nodes=newnodes,id=newid }
 
 renderNode:GraphicalNode.Model-> Html Msg
 renderNode node = App.map NodeUpdate (GraphicalNode.view node)
@@ -72,7 +73,8 @@ graphAreaStyle:Int -> List(String,String)
 graphAreaStyle offset =[
     ("margin-left", (toString offset) ++"px"),
     ("background-color","green"),
-    ("width","100%")
+    ("width","100%"),
+    ("height","100%")
     ]
 
 optionSpawn : Attribute Msg

@@ -27,41 +27,34 @@ type alias Drag =
 
 -- UPDATE
 
+type OutMsg=ReleasedAt Int Int Int
 
 type Msg
     = DragStart Position Int
     | DragAt Position Int
     | DragEnd Position Int
-    | ReleasedAt Int Int Model
     | SetParent String Int
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-  ( updateHelp msg model, Cmd.none )
+update : Msg -> Model -> ( Model, Cmd Msg,Maybe OutMsg )
+update msg ({position, drag,parent,id} as model) =
+  let 
+      outmsg=case  msg of 
+          DragEnd xy id-> let pos=(getPosition model)in Just (ReleasedAt pos.x pos.y id)
+          _-> Nothing
+      newmodel= case (Debug.log "node msg" msg) of
+        DragStart xy id->
+          Model position (Just (Drag xy xy)) parent id
 
+        DragAt xy id->
+          Model position (Maybe.map (\{start} -> Drag start xy) drag) parent id
 
-updateHelp : Msg -> Model -> Model
-updateHelp msg ({position, drag,parent,id} as model) =
-  case msg of
-    DragStart xy id->
-      Model position (Just (Drag xy xy)) parent id
-
-    DragAt xy id->
-      Model position (Maybe.map (\{start} -> Drag start xy) drag) parent id
-
-    DragEnd p id->
-      let newmodel =Model (getPosition model) Nothing parent id in
-            let pos = getPosition model in
-                      let (nm2,cm) =update (ReleasedAt pos.x pos.y newmodel) newmodel in
-                                                                                nm2
-    ReleasedAt x y n -> model
-    SetParent p id-> {model|parent=p}
-
-
+        DragEnd p id->
+          Model (getPosition model) Nothing parent id
+        SetParent p id-> {model|parent=p}
+  in (newmodel,Cmd.none,outmsg)
 
 -- SUBSCRIPTIONS
-
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

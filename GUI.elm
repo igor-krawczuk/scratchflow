@@ -10,6 +10,7 @@ import Window as Window
 import Task
 import Mouse exposing (Position)
 import Dict
+import Debug exposing (..)
 
 -- IMPORT COMPONENTS
 import Selector
@@ -48,7 +49,7 @@ update msg model =
     case msg of
         NoOp -> (model,Cmd.none)
         SubscriptionUpdate submsg -> handleSubs submsg model
-        SelectorUpdate selmsg -> handleSelectorUpdate selmsg model
+        SelectorUpdate selmsg -> handleSelectorUpdate (Debug.log "GUI-selmsg" selmsg) model
         GraphAreaUpdate grapharemsg -> handleGraphAreaUpdate grapharemsg model
         CheckQueue -> handleQueue model
 
@@ -129,7 +130,7 @@ handleSelectorUpdate selmsg model=
             (newselmodel,selcm,pmsg)= (Selector.update selmsg model.selectorModel)
             newModel ={model | selectorModel = newselmodel}
                  in 
-                case pmsg of
+                case (Debug.log"gui-Sendnodepmsg" pmsg) of
                     Just (Selector.SendNode node)-> handleGraphAreaUpdate (GraphArea.AddNode node) newModel
                     Nothing -> (newModel, Cmd.map SelectorUpdate selcm)
 
