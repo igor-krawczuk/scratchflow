@@ -1,11 +1,9 @@
 module Tree exposing (..)
 
-import Array
-import List
-import Maybe
+import Array exposing (Array)
 
 type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
-type TensorType = FloatTensor | IntTensor | NumberTensor | BoolTensor | StringTensor | AnyTensor
+type TensorType = FloatTensor | IntTensor | NumberTensor | BoolTensor | StringTensor | AnyTensor | NoTensor
 
 type alias Tree = {
     nodes : List Node
@@ -32,38 +30,38 @@ type NodeType = Input String TensorType | Output |
     RandomNormal Float Float
 
 nbInputs : NodeType -> Int
-nbInputs nodeType = List.length (inputTypes nodeType)
+nbInputs nodeType = Array.length (inputTypes nodeType)
 
-inputTypes : NodeType -> List TensorType
+inputTypes : NodeType -> Array TensorType
 inputTypes nodeType = 
     case nodeType of
-        Input _ _ -> []
-        Output -> [AnyTensor]
-        Constant _ -> []
-        Variable _ -> []
-        Add -> [NumberTensor, NumberTensor]
-        Sub -> [NumberTensor, NumberTensor]
-        Mul -> [NumberTensor, NumberTensor]
-        Div -> [NumberTensor, NumberTensor]
-        Mod -> [NumberTensor, NumberTensor]
-        RandomNormal _ _ -> [IntTensor]
+        Input _ _ -> Array.fromList []
+        Output -> Array.fromList [AnyTensor]
+        Constant _ -> Array.fromList []
+        Variable _ -> Array.fromList []
+        Add -> Array.fromList [NumberTensor, NumberTensor]
+        Sub -> Array.fromList [NumberTensor, NumberTensor]
+        Mul -> Array.fromList [NumberTensor, NumberTensor]
+        Div -> Array.fromList [NumberTensor, NumberTensor]
+        Mod -> Array.fromList [NumberTensor, NumberTensor]
+        RandomNormal _ _ -> Array.fromList [IntTensor]
 
 nbOutputs : NodeType -> Int
-nbOutputs nodeType = List.length (outputTypes nodeType)
+nbOutputs nodeType = Array.length (outputTypes nodeType)
 
-outputTypes : NodeType -> List TensorType
+outputTypes : NodeType -> Array TensorType
 outputTypes nodeType =
     case nodeType of
-        Input _ _ -> [AnyTensor]
-        Output -> []
-        Constant _ -> [AnyTensor]
-        Variable _ -> [AnyTensor]
-        Add -> [NumberTensor]
-        Sub -> [NumberTensor]
-        Mul -> [NumberTensor]
-        Div -> [NumberTensor]
-        Mod -> [NumberTensor]
-        RandomNormal _ _ -> [FloatTensor]
+        Input _ _ -> Array.fromList [AnyTensor]
+        Output -> Array.fromList []
+        Constant _ -> Array.fromList [AnyTensor]
+        Variable _ -> Array.fromList [AnyTensor]
+        Add -> Array.fromList [NumberTensor]
+        Sub -> Array.fromList [NumberTensor]
+        Mul -> Array.fromList [NumberTensor]
+        Div -> Array.fromList [NumberTensor]
+        Mod -> Array.fromList [NumberTensor]
+        RandomNormal _ _ -> Array.fromList [FloatTensor]
 
 compatibleTypes : TensorType -> TensorType -> Bool
 compatibleTypes type1 type2 = case type1 of
@@ -71,22 +69,34 @@ compatibleTypes type1 type2 = case type1 of
     IntTensor -> type2 == IntTensor || type2 == NumberTensor || type2 == AnyTensor
     FloatTensor -> type2 == FloatTensor || type2 == NumberTensor || type2 == AnyTensor
     AnyTensor -> True
+    NoTensor -> False
     _ -> type2 == type1 || type2 == AnyTensor
 
-bindNodes : (Int, Int) -> (Int, Int) -> Tree -> Tree
+bindNodes : (Int, Int) -> (Int, Int) -> Tree -> Maybe Tree
 bindNodes (nodeId1, id1) (nodeId2, id2) tree = let
         node1 = case List.head (List.filter (\x -> x.id == nodeId1) tree.nodes) of
-            Just n1 -> n1
+            Just n1 -> case (Array.get id1 n1.outputs) of
+                Just Nothing -> n1
+                _ -> dummyNode
             Nothing -> dummyNode
+        node1OutType = case Array.get id1 (outputTypes node1.nodeType) of
+            Just type1 -> type1
+            Nothing -> NoTensor
         node2 = case List.head (List.filter (\x -> x.id == nodeId2) tree.nodes) of
-            Just n2 -> n2
+            Just n2 -> case (Array.get id2 n2.inputs) of
+                Just Nothing -> n2
+                _ -> dummyNode
             Nothing -> dummyNode
-
+        node2InType = case Array.get id2 (inputTypes node2.nodeType) of
+            Just type2 -> type2
+            Nothing -> NoTensor
         newNode1 = { node1 | outputs = Array.set id1 (Just node2.id) node1.outputs }
         newNode2 = { node2 | inputs = Array.set id2 (Just node1.id) node2.inputs }
         otherNodes = List.filter (\x -> x.id /= node1.id && x.id /= node2.id) tree.nodes
         newNodes = List.append otherNodes [newNode1, newNode2]
-    in { tree | nodes = newNodes }
+    in if (compatibleTypes node1OutType node2InType)
+        then Just { tree | nodes = newNodes }
+        else Nothing
 
 unbindNodes : (Node, Int) -> (Node, Int) -> Tree -> Tree
 unbindNodes (node1, id1) (node2, id2) tree = let

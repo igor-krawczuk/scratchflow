@@ -104,3 +104,4 @@ displayTensorType tensorType = case tensorType of
     BoolTensor -> "tf.bool"
     StringTensor -> "tf.string"
     AnyTensor -> ""
+    NoTensor -> ""
