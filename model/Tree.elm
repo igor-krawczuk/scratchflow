@@ -25,9 +25,12 @@ dummyNode = {
  }
 
 type NodeType = Input String TensorType | Output |
-    Constant Tensor | Variable Tensor |
-    Add | Sub | Mul | Div | Mod |
-    RandomNormal Float Float
+    Constant Tensor | Variable Tensor | Zeros TensorType |
+    Add | Sub | Mul | Div | Mod | Neg | Log |
+    Equal | Argmax Int | Cast TensorType |
+    RandomNormal Float Float |
+    ReduceMean | ReduceSum (List Int) |
+    TrainGDOMinimize Float
 
 nbInputs : NodeType -> Int
 nbInputs nodeType = Array.length (inputTypes nodeType)
@@ -39,12 +42,21 @@ inputTypes nodeType =
         Output -> Array.fromList [AnyTensor]
         Constant _ -> Array.fromList []
         Variable _ -> Array.fromList []
+        Zeros _ -> Array.fromList[IntTensor]
         Add -> Array.fromList [NumberTensor, NumberTensor]
         Sub -> Array.fromList [NumberTensor, NumberTensor]
         Mul -> Array.fromList [NumberTensor, NumberTensor]
         Div -> Array.fromList [NumberTensor, NumberTensor]
         Mod -> Array.fromList [NumberTensor, NumberTensor]
+        Neg -> Array.fromList [NumberTensor]
+        Log -> Array.fromList [NumberTensor]
+        Equal -> Array.fromList [AnyTensor, AnyTensor]
+        Argmax _ -> Array.fromList [NumberTensor]
+        Cast _ -> Array.fromList [AnyTensor]
         RandomNormal _ _ -> Array.fromList [IntTensor]
+        ReduceMean -> Array.fromList [NumberTensor]
+        ReduceSum _ -> Array.fromList [NumberTensor]
+        TrainGDOMinimize _ -> Array.fromList[NumberTensor]
 
 nbOutputs : NodeType -> Int
 nbOutputs nodeType = Array.length (outputTypes nodeType)
@@ -56,12 +68,21 @@ outputTypes nodeType =
         Output -> Array.fromList []
         Constant _ -> Array.fromList [AnyTensor]
         Variable _ -> Array.fromList [AnyTensor]
+        Zeros _ -> Array.fromList [FloatTensor]
         Add -> Array.fromList [NumberTensor]
         Sub -> Array.fromList [NumberTensor]
         Mul -> Array.fromList [NumberTensor]
         Div -> Array.fromList [NumberTensor]
         Mod -> Array.fromList [NumberTensor]
+        Neg -> Array.fromList [NumberTensor]
+        Log -> Array.fromList [NumberTensor]
+        Equal -> Array.fromList [BoolTensor]
+        Argmax _ -> Array.fromList [IntTensor]
+        Cast t -> Array.fromList [t]
         RandomNormal _ _ -> Array.fromList [FloatTensor]
+        ReduceMean -> Array.fromList [NumberTensor]
+        ReduceSum _ -> Array.fromList [NumberTensor]
+        TrainGDOMinimize _ -> Array.fromList[AnyTensor]
 
 compatibleTypes : TensorType -> TensorType -> Bool
 compatibleTypes type1 type2 = case type1 of

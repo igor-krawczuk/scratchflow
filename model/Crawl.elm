@@ -39,9 +39,14 @@ unwrap array = Array.map (\x -> case x of
 
 actualCode : NodeType -> Int -> Array.Array Int -> Array.Array Int -> String
 actualCode nodeType nodeId inputs outputs = case nodeType of
-    Input name tensorType -> name ++ " = tf.placeholder(" ++ (displayTensorType tensorType) ++ ")\n"
+    Input name t -> name ++ " = tf.placeholder(" ++ (displayTensorType t) ++ ")\n"
     Constant x -> "v" ++ (toString nodeId) ++ " = tf.constant(" ++ (displayTensor x) ++ ")\n"
     Variable x -> "v" ++ (toString nodeId) ++ " = tf.Variable(" ++ (displayTensor x) ++ ")\n"
+    Zeros t -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.zeros(v" ++ (toString ident) ++ ", " ++ (toString t) ++ ")\n"
+            _ -> ""
     Add -> let
         id1 = Array.get 0 inputs
         id2 = Array.get 1 inputs
@@ -82,10 +87,53 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
                 Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.mod(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
                 _ -> ""
             _ -> ""
+    Neg -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.neg(v" ++ (toString ident) ++  ")\n"
+            _ -> ""
+    Log -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.log(v" ++ (toString ident) ++  ")\n"
+            _ -> ""
+    Equal -> let
+        id1 = Array.get 0 inputs
+        id2 = Array.get 1 inputs
+        in case id1 of
+            Just ident1 -> case id2 of
+                Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.equal(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
+                _ -> ""
+            _ -> ""
+    Argmax d -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.argmax(v" ++ (toString ident) ++ ", " ++ (toString d) ++ ")\n"
+            _ -> ""
+    Cast t -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.cast(v" ++ (toString ident) ++ ", " ++ (displayTensorType t) ++ ")\n"
+            _ -> ""
     RandomNormal mean stddev -> let
         id = Array.get 0 inputs
         in case id of
             Just ident -> "v" ++ (toString nodeId) ++ " = tf.random_normal(v" ++ (toString ident) ++ ", " ++ (toString mean) ++ ", " ++ (toString stddev) ++ ")\n"
+            _ -> ""
+    ReduceMean -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.reduce_mean(v" ++ (toString ident) ++ ")\n"
+            _ -> ""
+    ReduceSum d -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.reduce_sum(v" ++ (toString ident) ++ ", " ++ (toString d) ++ ")\n"
+            _ -> ""
+    TrainGDOMinimize f -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.train.GradientDescentOptimizer(" ++ (toString f) ++ ").minimize(v" ++ (toString ident) ++ "))\n"
             _ -> ""
     _ -> "\n"
 
