@@ -6,7 +6,7 @@ import Maybe
 
 -- For now no edges, they are stored in the nodes (2-way linked list)
 nodeId : Int
-nodeId = 0
+nodeId = 1
 
 type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
 
