@@ -14,7 +14,7 @@ import Task
 type alias Model =
     { position : Position,
      drag : Maybe Drag,
-        parent:String,
+        text:String,
         id:Int
     }
 
@@ -37,21 +37,21 @@ type Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg,Maybe OutMsg )
-update msg ({position, drag,parent,id} as model) =
+update msg ({position, drag,text,id} as model) =
   let 
       outmsg=case  msg of 
           DragEnd xy id-> let pos=(getPosition model)in Just (ReleasedAt pos.x pos.y id)
           _-> Nothing
       newmodel= case (Debug.log "node msg" msg) of
         DragStart xy id->
-          Model position (Just (Drag xy xy)) parent id
+          Model position (Just (Drag xy xy)) text id
 
         DragAt xy id->
-          Model position (Maybe.map (\{start} -> Drag start xy) drag) parent id
+          Model position (Maybe.map (\{start} -> Drag start xy) drag) text id
 
         DragEnd p id->
-          Model (getPosition model) Nothing parent id
-        SetParent p id-> {model|parent=p}
+          Model (getPosition model) Nothing text id
+        SetParent p id-> {model|text=p}
   in (newmodel,Cmd.none,outmsg)
 
 -- SUBSCRIPTIONS
@@ -111,8 +111,8 @@ view model =
                    , "justify-content" => "center"
                    ]
                ]
-               [ text ("Drag Me!" ++ toString realPosition.x ++" "++toString realPosition.y),
-               text model.parent
+               [ 
+               text model.text
                ]
 
 

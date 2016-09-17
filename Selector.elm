@@ -50,7 +50,7 @@ view : Model -> Html Msg
 view model =
     div [style (selectorStyle model.width)]
     [ul [ style listStyle] (
-        List.map (\o -> li [optionSpawn, style optionstyle] [text o.text] ) model.options),
+        List.map (\o -> li [optionSpawn o.text, style optionstyle] [text o.text] ) model.options),
         renderSelNode model.selNode
         ]
 
@@ -85,18 +85,20 @@ forwardMsg gnmsg model=
 
 checkNodeRelease:Int->Int->Int->Model->(Model,Cmd Msg,Maybe OutMsg)
 checkNodeRelease x y id model =
-       if x < model.width then (model,Cmd.none,Nothing) else
+       if x < model.width then ({model|selNode=Nothing},Cmd.none,Nothing) else
           case model.selNode of
                         Nothing -> (model,Cmd.none,Nothing)--check how this could be
                         Just nn -> ({model | selNode = Nothing},Cmd.none,Just (SendNode nn))
 
 -- HELPERS
-makeNode:GraphicalNode.Model
-makeNode=(GraphicalNode.Model (Position 0 0) Nothing  "selector" 0)
+makeNode:String->GraphicalNode.Model
+makeNode text=(GraphicalNode.Model (Position 0 0) Nothing  text 0)
 
-optionSpawn : Attribute Msg
-optionSpawn =
-  Html.Events.onClick (AddNode makeNode)
+
+
+optionSpawn :String->Attribute Msg
+optionSpawn text=
+  Html.Events.onClick (AddNode (makeNode text))
 
 
 renderSelNode:SelNode -> Html Msg

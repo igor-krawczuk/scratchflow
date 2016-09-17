@@ -56,7 +56,7 @@ addNode model nn=
     let newid=model.id+1 
         pos = GraphicalNode.getPosition nn
                 in 
-    let ni=(Debug.log"grapharea added" {nn|id=newid, parent="graph", position=pos, drag=Nothing}) in
+    let ni=(Debug.log"grapharea added" {nn|id=newid, position=pos, drag=Nothing}) in
     let newnodes=(Debug.log "grapharea newdict" (Dict.insert newid ni model.nodes)) in
             {model|nodes=newnodes,id=newid }
 
