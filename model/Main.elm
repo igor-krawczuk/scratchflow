@@ -37,13 +37,15 @@ main = let
     }
     -}
     code = newTree
-     |> addNode (Constant (Scalar 1)) 1
-     |> addNode (Constant (Scalar 2)) 2
-     |> addNode AddType 3
+     |> addNode (Constant (Vector [1,2])) 1
+     |> addNode (Constant (Vector [2,3])) 2
+     |> addNode Add 3
      |> addNode Output 4
+     |> addNode (RandomNormal 1 0.5) 5
      |> bindNodes (1,0) (3,0)
      |> bindNodes (2,0) (3,1)
-     |> bindNodes (3,0) (4,0)
+     |> bindNodes (3,0) (5,0)
+     |> bindNodes (5,0) (4,0)
      --|> toString
      |> crawl
     in Html.textarea [Html.Attributes.cols 80, Html.Attributes.rows 25] [Html.text code]

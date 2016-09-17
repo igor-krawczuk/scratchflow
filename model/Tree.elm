@@ -5,6 +5,7 @@ import List
 import Maybe
 
 type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
+type TensorType = FloatTensor | IntTensor | NumberTensor | BoolTensor | StringTensor | AnyTensor
 
 type alias Tree = {
     nodes : List Node
@@ -25,33 +26,52 @@ dummyNode = {
     outputs = Array.fromList []
  }
 
-type NodeType = Input Tensor | Output | 
+type NodeType = Input String TensorType | Output |
     Constant Tensor | Variable Tensor |
-    AddType | SubType | MulType | DivType
+    Add | Sub | Mul | Div | Mod |
+    RandomNormal Float Float
 
 nbInputs : NodeType -> Int
-nbInputs nodeType = 
+nbInputs nodeType = List.length (inputTypes nodeType)
+
+inputTypes : NodeType -> List TensorType
+inputTypes nodeType = 
     case nodeType of
-        Input _ -> 0
-        Output -> 1
-        Constant _ -> 0
-        Variable _ -> 0
-        AddType -> 2
-        SubType -> 2
-        MulType -> 2
-        DivType -> 2
+        Input _ _ -> []
+        Output -> [AnyTensor]
+        Constant _ -> []
+        Variable _ -> []
+        Add -> [NumberTensor, NumberTensor]
+        Sub -> [NumberTensor, NumberTensor]
+        Mul -> [NumberTensor, NumberTensor]
+        Div -> [NumberTensor, NumberTensor]
+        Mod -> [NumberTensor, NumberTensor]
+        RandomNormal _ _ -> [IntTensor]
 
 nbOutputs : NodeType -> Int
-nbOutputs nodeType =
+nbOutputs nodeType = List.length (outputTypes nodeType)
+
+outputTypes : NodeType -> List TensorType
+outputTypes nodeType =
     case nodeType of
-        Input _ -> 1
-        Output -> 0
-        Constant _ -> 1
-        Variable _ -> 1
-        AddType -> 1
-        SubType -> 1
-        MulType -> 1
-        DivType -> 1
+        Input _ _ -> [AnyTensor]
+        Output -> []
+        Constant _ -> [AnyTensor]
+        Variable _ -> [AnyTensor]
+        Add -> [NumberTensor]
+        Sub -> [NumberTensor]
+        Mul -> [NumberTensor]
+        Div -> [NumberTensor]
+        Mod -> [NumberTensor]
+        RandomNormal _ _ -> [FloatTensor]
+
+compatibleTypes : TensorType -> TensorType -> Bool
+compatibleTypes type1 type2 = case type1 of
+    NumberTensor -> type2 == NumberTensor || type2 == IntTensor || type2 == FloatTensor || type2 == AnyTensor
+    IntTensor -> type2 == IntTensor || type2 == NumberTensor || type2 == AnyTensor
+    FloatTensor -> type2 == FloatTensor || type2 == NumberTensor || type2 == AnyTensor
+    AnyTensor -> True
+    _ -> type2 == type1 || type2 == AnyTensor
 
 bindNodes : (Int, Int) -> (Int, Int) -> Tree -> Tree
 bindNodes (nodeId1, id1) (nodeId2, id2) tree = let
@@ -61,6 +81,7 @@ bindNodes (nodeId1, id1) (nodeId2, id2) tree = let
         node2 = case List.head (List.filter (\x -> x.id == nodeId2) tree.nodes) of
             Just n2 -> n2
             Nothing -> dummyNode
+
         newNode1 = { node1 | outputs = Array.set id1 (Just node2.id) node1.outputs }
         newNode2 = { node2 | inputs = Array.set id2 (Just node1.id) node2.inputs }
         otherNodes = List.filter (\x -> x.id /= node1.id && x.id /= node2.id) tree.nodes

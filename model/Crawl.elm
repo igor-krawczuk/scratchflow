@@ -39,10 +39,10 @@ unwrap array = Array.map (\x -> case x of
 
 actualCode : NodeType -> Int -> Array.Array Int -> Array.Array Int -> String
 actualCode nodeType nodeId inputs outputs = case nodeType of
-    Input x -> "\n"
+    Input name tensorType -> name ++ " = tf.placeholder(" ++ (displayTensorType tensorType) ++ ")\n"
     Constant x -> "v" ++ (toString nodeId) ++ " = tf.constant(" ++ (displayTensor x) ++ ")\n"
     Variable x -> "v" ++ (toString nodeId) ++ " = tf.Variable(" ++ (displayTensor x) ++ ")\n"
-    AddType -> let
+    Add -> let
         id1 = Array.get 0 inputs
         id2 = Array.get 1 inputs
         in case id1 of
@@ -50,7 +50,7 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
                 Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.add(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
                 _ -> ""
             _ -> ""
-    SubType -> let
+    Sub -> let
         id1 = Array.get 0 inputs
         id2 = Array.get 1 inputs
         in case id1 of
@@ -58,7 +58,7 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
                 Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.sub(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
                 _ -> ""
             _ -> ""
-    MulType -> let
+    Mul -> let
         id1 = Array.get 0 inputs
         id2 = Array.get 1 inputs
         in case id1 of
@@ -66,13 +66,26 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
                 Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.mul(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
                 _ -> ""
             _ -> ""
-    DivType -> let
+    Div -> let
         id1 = Array.get 0 inputs
         id2 = Array.get 1 inputs
         in case id1 of
             Just ident1 -> case id2 of
                 Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.div(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
                 _ -> ""
+            _ -> ""
+    Mod -> let
+        id1 = Array.get 0 inputs
+        id2 = Array.get 1 inputs
+        in case id1 of
+            Just ident1 -> case id2 of
+                Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.mod(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
+                _ -> ""
+            _ -> ""
+    RandomNormal mean stddev -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.random_normal(v" ++ (toString ident) ++ ", " ++ (toString mean) ++ ", " ++ (toString stddev) ++ ")\n"
             _ -> ""
     _ -> "\n"
 
@@ -82,3 +95,12 @@ displayTensor tensor = case tensor of
     Vector s -> toString s
     Matrix s -> toString s
     Cube s -> toString s
+
+displayTensorType : TensorType -> String
+displayTensorType tensorType = case tensorType of
+    NumberTensor -> "tf.float32"
+    IntTensor -> "tf.int32"
+    FloatTensor -> "tf.float32"
+    BoolTensor -> "tf.bool"
+    StringTensor -> "tf.string"
+    AnyTensor -> ""
