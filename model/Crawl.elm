@@ -1,3 +1,5 @@
+module Crawl exposing (crawl)
+
 import List
 import Array
 import String
@@ -38,8 +40,8 @@ unwrap array = Array.map (\x -> case x of
 actualCode : NodeType -> Int -> Array.Array Int -> Array.Array Int -> String
 actualCode nodeType nodeId inputs outputs = case nodeType of
     Input x -> "\n"
-    Constant x -> "v" ++ (toString nodeId) ++ " = tf.constant(" ++ (toString x) ++ ")\n"
-    Variable x -> "v" ++ (toString nodeId) ++ " = tf.Variable(" ++ (toString x) ++ ")\n"
+    Constant x -> "v" ++ (toString nodeId) ++ " = tf.constant(" ++ (displayTensor x) ++ ")\n"
+    Variable x -> "v" ++ (toString nodeId) ++ " = tf.Variable(" ++ (displayTensor x) ++ ")\n"
     AddType -> let
         id1 = Array.get 0 inputs
         id2 = Array.get 1 inputs
@@ -73,3 +75,10 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
                 _ -> ""
             _ -> ""
     _ -> "\n"
+
+displayTensor : Tensor -> String
+displayTensor tensor = case tensor of
+    Scalar s -> toString s
+    Vector s -> toString s
+    Matrix s -> toString s
+    Cube s -> toString s
