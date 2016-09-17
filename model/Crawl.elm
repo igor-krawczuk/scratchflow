@@ -41,11 +41,15 @@ actualCode : NodeType -> Int -> Array.Array Int -> Array.Array Int -> String
 actualCode nodeType nodeId inputs outputs = case nodeType of
     Input name t -> name ++ " = tf.placeholder(" ++ (displayTensorType t) ++ ")\n"
     Constant x -> "v" ++ (toString nodeId) ++ " = tf.constant(" ++ (displayTensor x) ++ ")\n"
-    Variable x -> "v" ++ (toString nodeId) ++ " = tf.Variable(" ++ (displayTensor x) ++ ")\n"
+    Variable -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.Variable(v" ++ (toString ident) ++ ")\n"
+            _ -> ""
     Zeros t -> let
         id = Array.get 0 inputs
         in case id of
-            Just ident -> "v" ++ (toString nodeId) ++ " = tf.zeros(v" ++ (toString ident) ++ ", " ++ (toString t) ++ ")\n"
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.zeros(v" ++ (toString ident) ++ ", " ++ (displayTensorType t) ++ ")\n"
             _ -> ""
     Add -> let
         id1 = Array.get 0 inputs
@@ -120,6 +124,19 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
         in case id of
             Just ident -> "v" ++ (toString nodeId) ++ " = tf.random_normal(v" ++ (toString ident) ++ ", " ++ (toString mean) ++ ", " ++ (toString stddev) ++ ")\n"
             _ -> ""
+    MatMul -> let
+        id1 = Array.get 0 inputs
+        id2 = Array.get 1 inputs
+        in case id1 of
+            Just ident1 -> case id2 of
+                Just ident2 -> "v" ++ (toString nodeId) ++ " = tf.matmul(v" ++ (toString ident1) ++ ", v" ++ (toString ident2) ++ ")\n"
+                _ -> ""
+            _ -> ""
+    SoftMax -> let
+        id = Array.get 0 inputs
+        in case id of
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.nn.softmax(v" ++ (toString ident) ++ ")\n"
+            _ -> ""
     ReduceMean -> let
         id = Array.get 0 inputs
         in case id of
@@ -133,7 +150,7 @@ actualCode nodeType nodeId inputs outputs = case nodeType of
     TrainGDOMinimize f -> let
         id = Array.get 0 inputs
         in case id of
-            Just ident -> "v" ++ (toString nodeId) ++ " = tf.train.GradientDescentOptimizer(" ++ (toString f) ++ ").minimize(v" ++ (toString ident) ++ "))\n"
+            Just ident -> "v" ++ (toString nodeId) ++ " = tf.train.GradientDescentOptimizer(" ++ (toString f) ++ ").minimize(v" ++ (toString ident) ++ ")\n"
             _ -> ""
     _ -> "\n"
 

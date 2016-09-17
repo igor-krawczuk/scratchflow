@@ -25,10 +25,10 @@ dummyNode = {
  }
 
 type NodeType = Input String TensorType | Output |
-    Constant Tensor | Variable Tensor | Zeros TensorType |
+    Constant Tensor | Variable | Zeros TensorType |
     Add | Sub | Mul | Div | Mod | Neg | Log |
     Equal | Argmax Int | Cast TensorType |
-    RandomNormal Float Float |
+    RandomNormal Float Float | MatMul | SoftMax |
     ReduceMean | ReduceSum (List Int) |
     TrainGDOMinimize Float
 
@@ -41,7 +41,7 @@ inputTypes nodeType =
         Input _ _ -> Array.fromList []
         Output -> Array.fromList [AnyTensor]
         Constant _ -> Array.fromList []
-        Variable _ -> Array.fromList []
+        Variable -> Array.fromList [AnyTensor]
         Zeros _ -> Array.fromList[IntTensor]
         Add -> Array.fromList [NumberTensor, NumberTensor]
         Sub -> Array.fromList [NumberTensor, NumberTensor]
@@ -54,6 +54,8 @@ inputTypes nodeType =
         Argmax _ -> Array.fromList [NumberTensor]
         Cast _ -> Array.fromList [AnyTensor]
         RandomNormal _ _ -> Array.fromList [IntTensor]
+        MatMul -> Array.fromList [NumberTensor, NumberTensor]
+        SoftMax -> Array.fromList [NumberTensor]
         ReduceMean -> Array.fromList [NumberTensor]
         ReduceSum _ -> Array.fromList [NumberTensor]
         TrainGDOMinimize _ -> Array.fromList[NumberTensor]
@@ -67,7 +69,7 @@ outputTypes nodeType =
         Input _ _ -> Array.fromList [AnyTensor]
         Output -> Array.fromList []
         Constant _ -> Array.fromList [AnyTensor]
-        Variable _ -> Array.fromList [AnyTensor]
+        Variable -> Array.fromList [AnyTensor]
         Zeros _ -> Array.fromList [FloatTensor]
         Add -> Array.fromList [NumberTensor]
         Sub -> Array.fromList [NumberTensor]
@@ -80,6 +82,8 @@ outputTypes nodeType =
         Argmax _ -> Array.fromList [IntTensor]
         Cast t -> Array.fromList [t]
         RandomNormal _ _ -> Array.fromList [FloatTensor]
+        MatMul -> Array.fromList [NumberTensor]
+        SoftMax -> Array.fromList [NumberTensor]
         ReduceMean -> Array.fromList [NumberTensor]
         ReduceSum _ -> Array.fromList [NumberTensor]
         TrainGDOMinimize _ -> Array.fromList[AnyTensor]
