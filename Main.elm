@@ -1,12 +1,19 @@
 import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
+
 import Html.Events exposing (on)
+
 import Json.Decode as Json exposing ((:=))
-import Mouse exposing (Position)
 import Window as Window
 import Task
-
+import Mouse exposing (Position)
+import Dict
+--MY IMPORTS
+import Selector
+import GraphicalNode
+import GraphArea
+import GUI exposing (..)
 
 
 main =
@@ -18,145 +25,5 @@ main =
     }
 
 
--- MODEL
-
-
-type alias Model =
-    { position : Position
-    , drag : Maybe Drag
-    }
-
-
-type alias Drag =
-    { start : Position
-    , current : Position
-    }
-
-
-init : ( Model, Cmd Msg )
-init =
-  ( Model (Position 200 200) Nothing, Cmd.none )
-
-
-
--- UPDATE
-
-
-type Msg
-    = DragStart Position
-    | DragAt Position
-    | DragEnd Position
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-  ( updateHelp msg model, Cmd.none )
-
-
-updateHelp : Msg -> Model -> Model
-updateHelp msg ({position, drag} as model) =
-  case msg of
-    DragStart xy ->
-      Model position (Just (Drag xy xy))
-
-    DragAt xy ->
-      Model position (Maybe.map (\{start} -> Drag start xy) drag)
-
-    DragEnd _ ->
-      Model (getPosition model) Nothing
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-  case model.drag of
-    Nothing ->
-      Sub.none
-
-    Just _ ->
-      Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
-
-
-
--- VIEW
-
-
-(=>) = (,)
-
-leftBarWidth=20
-rightAreaWidth=100-leftBarWidth
-leftBarStyle = style ["background-color"=>"red",
-    "width"=> (toString leftBarWidth  ++ "%"),
-    "float"=>"left",
-    "border-right-width"=>"2px",
-    "border-right-style"=>"solid",
-    "height"=>"100%"]
-rightAreaStyle = style ["background-color"=>"green",
-    "margin-left"=> (toString leftBarWidth ++ "%"),
-    "height"=>"100%"]
-
-view : Model -> Html Msg
-view model =
-    let
-        realPosition =
-            getPosition model
-        color=
-            blockColor realPosition.x  realPosition.y
-    in
-       div [style ["height"=>"100%"]]
-       [
-           div [attribute "class" "leftBar", leftBarStyle] [text "red"],
-           div [attribute "class" "rightArea", rightAreaStyle] [
-               text "first",
-               div 
-               [
-                   onMouseDown
-                   , style
-                   [ "background-color" => color--"#3C8D2F"
-                   , "cursor" => "move"
-
-                   , "width" => "100px"
-                   , "height" => "100px"
-                   , "border-radius" => "4px"
-                   , "position" => "absolute"
-                   , "left" => px realPosition.x
-                   , "top" => px realPosition.y
-
-                   , "color" => "white"
-                   , "display" => "flex"
-                   , "align-items" => "center"
-                   , "justify-content" => "center"
-                   ]
-               ]
-               [ text ("Drag Me!" ++ toString realPosition.x ++" "++toString realPosition.y)
-               ]
-           ]
-       ]
-
-
-px : Int -> String
-px number =
-  toString number ++ "px"
-
-
-getPosition : Model -> Position
-getPosition {position, drag} =
-  case drag of
-    Nothing ->
-      position
-
-    Just {start,current} ->
-      Position
-        (position.x + current.x - start.x)
-        (position.y + current.y - start.y)
-
-
-onMouseDown : Attribute Msg
-onMouseDown =
-  on "mousedown" (Json.map DragStart Mouse.position)
-
----plan
---- write update/model/view architecture for node generation
+-- INIT
+init = helperGetInit

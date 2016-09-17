@@ -19,6 +19,8 @@ type Msg = AddNode GraphicalNode.Model
     | NodeUpdate GraphicalNode.Msg
     | ChangeOffset Int
 
+type OutMsg = NodeReceived
+
 type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int}
 
 view : Model -> Html Msg
@@ -26,12 +28,12 @@ view model =
     div [style (graphAreaStyle model.offset)]
     ([text "Grapharea"]++(List.map (\n -> renderNode n) (Dict.values model.nodes)))
 
-update: Msg->Model-> (Model, Cmd Msg)
+update: Msg->Model-> (Model, Cmd Msg, Maybe OutMsg)
 update msg model=
     case msg of
-        ChangeOffset w -> ({model|offset = w},Cmd.none)
-        NodeUpdate newnodemodel -> (model,Cmd.none)
-        AddNode newnode -> ((addNode model newnode), Cmd.none)
+        ChangeOffset w -> ({model|offset = w},Cmd.none, Nothing)
+        NodeUpdate newnodemodel -> (model,Cmd.none, Nothing)
+        AddNode newnode -> ((addNode model newnode), Cmd.none,Just NodeReceived)
 
 addNode:Model->GraphicalNode.Model->Model
 addNode model nn=
