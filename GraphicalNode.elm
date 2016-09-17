@@ -89,11 +89,6 @@ view model =
             getPosition model
         color="red"
     in
-       div [style ["height"=>"100%"]]
-       [
-           div [attribute "class" "leftBar", leftBarStyle] [text "red"],
-           div [attribute "class" "rightArea", rightAreaStyle] [
-               text "first",
                div 
                [
                    onMouseDown
@@ -116,8 +111,6 @@ view model =
                ]
                [ text ("Drag Me!" ++ toString realPosition.x ++" "++toString realPosition.y)
                ]
-           ]
-       ]
 
 
 px : Int -> String

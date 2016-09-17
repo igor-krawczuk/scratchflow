@@ -24,11 +24,13 @@ type alias Model = {width:Int, options: List Option, newNode:Maybe NewNode}
 
 selectorStyle: Int -> List (String,String)
 selectorStyle width = [
-    ("width", ((0.2 * toFloat width) |> toString) ++"px"),
+    ("width", (toString width ) ++"px"),
+    ("float", "left"),
     ("background-color","red")
     ]
 listStyle = [("","")]
 optionstyle= [("","")]
+
 update: Msg->Model-> (Model, Cmd Msg)
 update msg model=
     case msg of
@@ -42,6 +44,7 @@ handleNewNode gnsmg model=
                         Nothing -> (model,Cmd.none)--check how this could be
                         Just nn -> let (newNNmodel,nncm)= (GraphicalNode.update gnsmg nn.node)
                                    in( updateNN model newNNmodel,Cmd.none)
+
 updateNN:Model->GraphicalNode.Model->Model
 updateNN model nnm=
     case model.newNode of 
@@ -62,7 +65,8 @@ renderNewNode newnode=
         Nothing -> text ""
         Just newn-> App.map NewNodeUpdate (GraphicalNode.view newn.node)
 
+selsubs=[]
 subscriptions: Model -> Sub Msg
 subscriptions model = case model.newNode of 
-    Nothing -> Sub.none
-    Just nn -> Sub.map NewNodeUpdate (GraphicalNode.subscriptions nn.node)
+        Nothing -> Sub.batch ([ Sub.none]++selsubs)
+        Just nn -> Sub.batch ([Sub.map NewNodeUpdate (GraphicalNode.subscriptions nn.node)]++selsubs)
