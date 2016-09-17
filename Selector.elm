@@ -1,26 +1,36 @@
-module Selector exposing (renderSelector,subscribeSelector, NodeSelector )
+module Selector exposing (..)
 import Html exposing (..)
--- MY IMPORTS
-import GraphicalNode exposing (GraphicalNode,FlowNode)
-type alias Option = {text:String,nodeType:FlowNode}
+import Html.Attributes exposing (..)
 
-type NewNodeStatus = NEW | READYTOADD| READYTODELETE
-type alias NewNode = {node:GraphicalNode, status:NewNodeStatus}
--- MODEL
-type alias StyleAttr= (String,String)
-type alias NodeSelector = {style: List StyleAttr, options: List Option, newNode: Maybe NewNode}
+import Html.Events exposing (on)
 
-type Msg = 
+import Json.Decode as Json exposing ((:=))
+import Mouse exposing (Position)
+import Task
 
-nodeSelStyle= [("height","100%")]
+type Msg = ChangeWidth Int
 
--- SUBSCRIPTION HOOK
-subscribeSelector:NodeSelector-> List (Sub Msg)
-subscribeSelector nodesel= [Sub.none]
+type alias Option = {text:String, id:Int}
+type NewNodeStatus = READYTODELETE | READYTOADD
+type alias NewNode = {status:NewNodeStatus,node:Int}
 
--- VIEW HOOK
-renderSelector:NodeSelector -> Html Msg
-renderSelector nodesel= text "Here be renderSel"
+type alias Model = {width:Int, options: List Option, newNode:Maybe NewNode}
 
-renderNewNode:Maybe NewNode -> Html Msg
-renderNewNode graphnode= text "Here be newNode " -- render as long as not release outside of selector, on release outside selector either delete or put into outbox
+selectorStyle: Int -> List (String,String)
+selectorStyle width = [
+    ("width", ((0.2 * toFloat width) |> toString) ++"px"),
+    ("background-color","red")
+    ]
+listStyle = [("","")]
+optionstyle= [("","")]
+update: Msg->Model-> (Model, Cmd Msg)
+update msg model=
+    case msg of
+        ChangeWidth w -> ({model|width = w},Cmd.none)
+
+view : Model -> Html Msg
+view model =
+    div [style (selectorStyle model.width)]
+    [ul [ style listStyle] (
+        List.map (\o -> li [ style optionstyle] [text o.text] ) model.options)
+        ]
