@@ -7,9 +7,11 @@ import Html.Events exposing (on)
 import Json.Decode as Json exposing ((:=))
 import Window as Window
 import Task
+import Mouse exposing (Position)
 
 -- IMPORT COMPONENTS
 import Selector
+import GraphicalNode
 
 main =
   App.program
@@ -38,7 +40,7 @@ topStyle = [("height","100%")]
 
 -- INIT
 init = (
-    Model (SubData (Window.Size 0 0 )) (Selector.Model 0 [Selector.Option "test" 0] Nothing),
+    Model (SubData (Window.Size 0 0 )) (Selector.Model 0 [Selector.Option "test" 0] (Just (Selector.NewNode Selector.PENDING (GraphicalNode.Model (Position 0 0) Nothing)))),
     Task.perform (\_-> NoOp) winSizeToMsg Window.size)
 
 winSizeToMsg: Window.Size -> Msg
@@ -70,8 +72,7 @@ updateWinDims subdata size=
 
 -- SUBSCRIPTIONS
 subscriptions: Model -> Sub Msg
-subscriptions model= Sub.batch [ Window.resizes winSizeToMsg]
-
+subscriptions model= Sub.batch [ Window.resizes winSizeToMsg,Sub.map SelectorUpdate (Selector.subscriptions model.selectorModel) ]
 
 -- VIEW
 view : Model -> Html Msg
