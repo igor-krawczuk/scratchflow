@@ -2,18 +2,8 @@ module Tree exposing (..)
 
 import Array exposing (Array)
 
-type Tensor = Scalar Float 
-            | Vector (List Float) 
-            | Matrix (List (List Float)) 
-            | Cube (List (List (List Float)))
-
-type TensorType = FloatTensor
-                | IntTensor
-                | NumberTensor
-                | BoolTensor
-                | StringTensor
-                | AnyTensor
-                | NoTensor
+type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
+type TensorType = FloatTensor | IntTensor | NumberTensor | BoolTensor | StringTensor | AnyTensor | NoTensor
 
 type alias Tree = {
     nodes : List Node

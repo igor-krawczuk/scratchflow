@@ -17,6 +17,8 @@ import Selector
 import GraphicalNode
 import GraphArea
 
+import Tree
+
 renderTop model = text ""
 
 -- MODEL
@@ -151,10 +153,48 @@ helperGetInit =
     (
         Selector.Model 
         0 
-        [Selector.Option "test" 0] 
+        getOptions
         Nothing
     )
     []
     (GraphArea.Model Dict.empty 0 0)
     ,
     Task.perform (\_-> NoOp) winSizeToMsg Window.size)
+
+getOptions =
+    [
+        Selector.Option "test" 
+        0]++(List.map (\t ->Selector.Option (toString t) 0) nodeTypes )
+
+tensorTypes=[
+      Tree.FloatTensor
+    , Tree.IntTensor
+    , Tree.NumberTensor
+    , Tree.BoolTensor
+    , Tree.StringTensor
+    , Tree.AnyTensor
+    , Tree.NoTensor
+    ]
+
+nodeTypes= (List.map (\t-> Tree.Input (toString t) t) tensorTypes)++[ 
+                Tree.Output
+              --, Tree.Constant Tensor
+              , Tree.Variable
+              --, Tree.Zeros TensorType
+              , Tree.Add
+              , Tree.Sub
+              , Tree.Mul
+              , Tree.Div
+              , Tree.Mod
+              , Tree.Neg
+              , Tree.Log
+              , Tree.Equal
+              --, Tree.Argmax Int
+              --, Tree.Cast TensorType
+              --, Tree.RandomNormal Float Float
+              , Tree.MatMul
+              , Tree.SoftMax
+              , Tree.ReduceMean
+              --, Tree.ReduceSum (List Int)
+              --, Tree.TrainGDOMinimize Float
+              ]
