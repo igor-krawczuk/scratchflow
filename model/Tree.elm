@@ -1,3 +1,5 @@
+module Tree exposing (..)
+
 import Array
 import List
 import Maybe
@@ -5,6 +7,8 @@ import Maybe
 -- For now no edges, they are stored in the nodes (2-way linked list)
 nodeId : Int
 nodeId = 0
+
+type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
 
 type alias Tree = {
     nodes : List Node
@@ -17,27 +21,33 @@ type alias Node = {
     outputs : Array.Array (Maybe Int)
 }
 
-type NodeType = Input Int | Output | AddType | SubType | MulType | DivType
+type NodeType = Input Tensor | Output | 
+    Constant Tensor | Variable Tensor |
+    AddType | SubType | MulType | DivType
 
 nbInputs : NodeType -> Int
 nbInputs nodeType = 
     case nodeType of
+        Input _ -> 0
         Output -> 2
+        Constant _ -> 0
+        Variable _ -> 0
         AddType -> 2
         SubType -> 2
         MulType -> 2
         DivType -> 2
-        Input _ -> 0
 
 nbOutputs : NodeType -> Int
 nbOutputs nodeType =
     case nodeType of
         Input _ -> 1
+        Output -> 0
+        Constant _ -> 1
+        Variable _ -> 1
         AddType -> 1
         SubType -> 1
         MulType -> 1
         DivType -> 1
-        Output -> 0
 
 bindNodes : (Node, Int) -> (Node, Int) -> Tree -> Tree
 bindNodes (node1, id1) (node2, id2) tree = let
