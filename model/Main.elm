@@ -1,6 +1,7 @@
 import Html
 import Html.Attributes
 import Array
+import Maybe exposing (andThen)
 
 import Tree exposing (..)
 import Crawl exposing (..)
@@ -43,14 +44,14 @@ main = let
      |> addNode Output 4
      |> addNode (RandomNormal 1 0.5) 5
      --|> toString
-    code = case bindNodes (1,0) (3,0) tree of
-        Just t1 -> case bindNodes (2,0) (3,1) t1 of
-            Just t2 -> case bindNodes (3,0) (5,0) t2 of
-                Just t3 -> case bindNodes (5,0) (4,0) t3 of
-                    Just t4 -> crawl t4
-                    _ -> ""
-                _ -> ""
-            _ -> ""
-        _ -> ""
+    graph = Just tree
+        `andThen` (\t -> bindNodes (1,0) (3,0) t)
+        `andThen` (\t -> bindNodes (2,0) (3,1) t)
+        `andThen` (\t -> bindNodes (3,0) (5,0) t)
+        `andThen` (\t -> bindNodes (5,0) (4,0) t)
+
+    code = case graph of
+        Just c -> crawl c
+        Nothing -> ""
      --|> toString
     in Html.textarea [Html.Attributes.cols 80, Html.Attributes.rows 25] [Html.text code]
