@@ -141,13 +141,6 @@ px : Int -> String
 px number =
   toString number ++ "px"
 
-type BLK=
-    A
-    |B
-
-blockColor x y=
-    if x >= 200 then "red" else "green"
-
 
 getPosition : Model -> Position
 getPosition {position, drag} =
@@ -165,3 +158,5 @@ onMouseDown : Attribute Msg
 onMouseDown =
   on "mousedown" (Json.map DragStart Mouse.position)
 
+---plan
+--- write update/model/view architecture for node generation
