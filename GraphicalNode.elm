@@ -137,5 +137,6 @@ onMouseDown : Int->Attribute Msg
 onMouseDown id =
   on "mousedown" (Json.map (\p->DragStart p id) Mouse.position )
 
+
 ---plan
 --- write update/model/view architecture for node generation

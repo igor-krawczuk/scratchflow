@@ -91,14 +91,12 @@ checkNodeRelease x y id model =
                         Just nn -> ({model | selNode = Nothing},Cmd.none,Just (SendNode nn))
 
 -- HELPERS
-makeNode:String->GraphicalNode.Model
-makeNode text=(GraphicalNode.Model (Position 0 0) Nothing  text 0)
 
 
 
 optionSpawn :String->Attribute Msg
 optionSpawn text=
-  Html.Events.onClick (AddNode (makeNode text))
+  Html.Events.on "mousedown" (Json.map (\p-> AddNode (GraphicalNode.Model p (Just(GraphicalNode.Drag p p))  text 0)) Mouse.position)
 
 
 renderSelNode:SelNode -> Html Msg
