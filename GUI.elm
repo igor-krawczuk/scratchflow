@@ -18,6 +18,7 @@ import GraphicalNode
 import GraphArea
 
 import Tree
+import Crawl
 
 renderTop model = text ""
 
@@ -31,13 +32,15 @@ type Msg= NoOp
     | SelectorUpdate Selector.Msg
     | GraphAreaUpdate GraphArea.Msg
     | CheckQueue
+    --| DisplayCode
 
 type alias SubData = {wsize: Window.Size}
 
 type alias Model = {subs:SubData,
     selectorModel:Selector.Model,
     subQ:List Msg,
-    graphAreaModel:GraphArea.Model
+    graphAreaModel:GraphArea.Model,
+    showCode: Bool
     }
 
 
@@ -54,10 +57,7 @@ update msg model =
         SelectorUpdate selmsg -> handleSelectorUpdate (Debug.log "GUI-selmsg" selmsg) model
         GraphAreaUpdate grapharemsg -> handleGraphAreaUpdate grapharemsg model
         CheckQueue -> handleQueue model
-
-
-
-
+        --DisplayCode -> (model, Cmd.none)
 
 
 -- SUBSCRIPTIONS
@@ -70,10 +70,10 @@ subscriptions model= Sub.batch [
 
 -- VIEW
 view : Model -> Html Msg
-view model= div [style topStyle] [renderTop model,
+view model= div [style topStyle] ([renderTop model,
     wrappedSelector model,
     wrappedGraphArea model
-    ]
+    ] ++ if (model.showCode) then [showCodeModel model] else [])
 
 wrappedSelector:Model-> Html Msg
 wrappedSelector model =
@@ -82,6 +82,11 @@ wrappedSelector model =
 wrappedGraphArea:Model-> Html Msg
 wrappedGraphArea model =
     App.map GraphAreaUpdate (GraphArea.view model.graphAreaModel)
+
+showCodeModel : Model -> Html Msg
+showCodeModel model = let
+    code = Crawl.crawl model.graphAreaModel.graph
+    in textarea [rows 80, cols 25] [text code]
 -- Widget Handlers
 
 -- HELPERS
@@ -129,11 +134,12 @@ updateWinDims subs size=
 handleSelectorUpdate:Selector.Msg ->Model -> (Model,Cmd Msg)
 handleSelectorUpdate selmsg model=
         let 
-            (newselmodel,selcm,pmsg)= (Selector.update selmsg model.selectorModel)
+            (newselmodel,selcm,pmsg) = (Selector.update selmsg model.selectorModel)
             newModel ={model | selectorModel = newselmodel}
                  in 
                 case (Debug.log"gui-Sendnodepmsg" pmsg) of
                     Just (Selector.SendNode node)-> handleGraphAreaUpdate (GraphArea.AddNode node) newModel
+                    Just (Selector.GenerateCode) -> ({model | showCode = True }, Cmd.none)
                     Nothing -> (newModel, Cmd.map SelectorUpdate selcm)
 
 
@@ -158,6 +164,7 @@ helperGetInit =
     )
     []
     (GraphArea.Model Dict.empty 0 0 Tree.newTree Nothing Dict.empty)
+    False
     ,
     Task.perform (\_-> NoOp) winSizeToMsg Window.size)
 

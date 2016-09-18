@@ -18,8 +18,9 @@ type Msg = ChangeWidth Int
     | SelNodeUpdate GraphicalNode.Msg
     | AddNode GraphicalNode.Model
     | ClearNode
+    | Generate
 
-type OutMsg = SendNode GraphicalNode.Model
+type OutMsg = SendNode GraphicalNode.Model | GenerateCode
 
 type alias Option = {text:String, id:Int, nodeType:Tree.NodeType}
 type alias SelNode = Maybe GraphicalNode.Model
@@ -44,7 +45,7 @@ update msg model=
         SelNodeUpdate gnmsg -> handleSelNode gnmsg model
         ClearNode -> ({model| selNode=Nothing},Cmd.none,Nothing)
         AddNode n -> ({model| selNode=Just n},Cmd.none,Nothing)
-
+        Generate -> (model, Cmd.none, Nothing)
 
 
 view : Model -> Html Msg
@@ -52,7 +53,8 @@ view model =
     div [style (selectorStyle model.width)]
     [ul [ style listStyle] (
         List.map (\o -> li [optionSpawn o.text o.nodeType, style optionstyle] [text o.text] ) model.options),
-        renderSelNode model.selNode
+        renderSelNode model.selNode,
+        button [ Html.Events.onClick Generate ] [text "Generate Code"]
         ]
 
 
