@@ -2,6 +2,8 @@ module GraphArea exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App as App
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
 
 import Html.Events exposing (on)
 
@@ -24,7 +26,9 @@ type OutMsg = NodeReceived
 
 type alias Edge={source:Int,sink: Maybe Int}
 type alias RealEdge={source:Int,sink:Int}
+type alias Convas={leftTop:Int,leftBot:Int,rightTop:Int,rightBot:Int}
 type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model,
+                    
                    offset:Int,
                    cur_id:Int,
                    graph:Tree.Tree,
@@ -34,8 +38,42 @@ type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model,
 
 view : Model -> Html Msg
 view model =
-    div [style (graphAreaStyle model.offset)]
-    (List.map (\n -> renderNode n) (Dict.values model.nodes))
+    div [Html.Attributes.style (graphAreaStyle model.offset)]
+    [
+        div [Html.Attributes.style [("background-color","white"),("margin-left",(toString model.offset++"px")),("width","100%"),("height","100%")]]
+        [Svg.svg [
+        (Svg.Attributes.viewBox ((toString model.offset)++" "++(toString 0)++" 1000 1000")),
+        (Svg.Attributes.display "float")
+            ] 
+
+            ([(Svg.foreignObject [] 
+                (List.map (\n ->  (renderNode n)) (Dict.values model.nodes)))
+                ]++
+                (List.map (\e-> renderEdge e model) (Dict.values model.edges))
+                
+            )
+            ]
+            
+    ]
+getNodePos nid model=
+    case Dict.get nid model.nodes of
+        Nothing -> (0,0)
+        Just no-> (no.position.x-model.offset  ,no.position.y )
+
+renderEdge:RealEdge->Model->Svg Msg
+renderEdge e model =
+    let 
+        (x1,y1)=getNodePos e.source model
+        (x2,y2)=getNodePos e.sink model
+    in
+    Debug.log "svg draw" (Svg.line [
+        Svg.Attributes.x1 (toString x1),
+        Svg.Attributes.y1 (toString y1),
+        Svg.Attributes.x2 (toString x2),
+        Svg.Attributes.y2 (toString y2),
+        Svg.Attributes.strokeWidth "5",
+        Svg.Attributes.stroke "black"
+        ] [])
 
 update: Msg->Model-> (Model, Cmd Msg, Maybe OutMsg)
 update msg model=
@@ -46,7 +84,7 @@ update msg model=
 
 handleNodeUpdate:Model->GraphicalNode.Msg->(Model,Cmd Msg,Maybe OutMsg)
 handleNodeUpdate model gnmsg=
-    case gnmsg of
+    case (Debug.log"graph msg" gnmsg) of
     GraphicalNode.DragStart pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragAt pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragEnd pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
@@ -60,17 +98,18 @@ checkEdge node_id model=
         Nothing->{model|newEdge=Just (Edge node_id Nothing)}
         Just edge-> 
             let s= case edge.sink of
-                    Nothing -> node_Id
+                    Nothing -> node_id
                     Just s ->s
                 in case Tree.bindNodes edge.source s  model.graph of
                     Nothing -> model
-                    Just newGraph -> let es=newEdge (edge.source,s) model.edges in
-                            { model | graph = newGraph,newEdge=Nothing, }
+                    Just newGraph -> let es=newEdge model.edges edge.source s  in
+                            (Debug.log "newEdge" { model | graph = newGraph,newEdge=Nothing,edges=es })
 
 
-newEdge:Dict (Int,Int) RealEdge->(Int,Int)->Dict (Int,Int) RealEdge
-newEdge olde s_to_s =
-    Dict.insert s_to_s edge RealEdge (s_to_s)
+newEdge:Dict.Dict (Int,Int) RealEdge->Int->Int->Dict.Dict (Int,Int) RealEdge
+newEdge olde so si =
+    Dict.insert (so,si) (RealEdge so si) olde
+
 
 forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
 forwardMsg gnmsg may_node model=
@@ -102,8 +141,7 @@ subscriptions model =
 
 graphAreaStyle:Int -> List(String,String)
 graphAreaStyle offset =[
-    ("margin-left", (toString offset) ++"px"),
-    ("background-color","green"),
+    ("margin-left", (toString (offset+5)) ++"px"),
     ("width","100%"),
     ("height","100%")
     ]
