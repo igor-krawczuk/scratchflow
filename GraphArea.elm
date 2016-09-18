@@ -13,6 +13,7 @@ import Dict
 import Debug exposing (..)
 -- IMPORT MYMODULES
 import GraphicalNode
+import Tree
 
 
 type Msg = AddNode GraphicalNode.Model
@@ -21,7 +22,7 @@ type Msg = AddNode GraphicalNode.Model
 
 type OutMsg = NodeReceived
 
-type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int}
+type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int, graph:Tree.Tree}
 
 view : Model -> Html Msg
 view model =
