@@ -127,11 +127,11 @@ bindNodes nodeId1 nodeId2 tree = let
                 in case (Array.get id1 n1.outputs) of
                     Just Nothing -> (n1, id1)
                     _ -> (dummyNode, id1)
-            Nothing -> (dummyNode, id1)
+            Nothing -> (dummyNode, -1)
         node1OutType = case Array.get id1 (outputTypes node1.nodeType) of
             Just type1 -> type1
             Nothing -> NoTensor
-        node2 = case List.head (List.filter (\x -> x.id == nodeId2) tree.nodes) of
+        (node2, id2) = case List.head (List.filter (\x -> x.id == nodeId2) tree.nodes) of
             Just n2 -> let
                 indexedInputs = Array.toIndexedList n2.inputs
                 id2 = case List.head (List.filter (\(i, x) -> x == Nothing) indexedInputs) of
@@ -140,7 +140,7 @@ bindNodes nodeId1 nodeId2 tree = let
                 in case (Array.get id2 n2.inputs) of
                 Just Nothing -> (n2, id2)
                 _ -> (dummyNode, id2)
-            Nothing -> (dummyNode, id2)
+            Nothing -> (dummyNode, -1)
         node2InType = case Array.get id2 (inputTypes node2.nodeType) of
             Just type2 -> type2
             Nothing -> NoTensor
