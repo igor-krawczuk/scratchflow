@@ -18,6 +18,7 @@ import GraphicalNode
 import GraphArea
 
 import Tree
+import Crawl
 
 renderTop model = text ""
 
@@ -72,9 +73,20 @@ subscriptions model= Sub.batch [
 view : Model -> Html Msg
 view model= div [style topStyle] [renderTop model,
     wrappedSelector model,
-    wrappedGraphArea model
+    wrappedGraphArea model,
+    displayCode model,
+    displayTree model,
+    displayVisGraph model
     ]
-
+displayTree model=
+    div [] [h3 [] [text "Nodes in DataFlow Graph model"],br [] [],text (toString model.graphAreaModel.graph)]
+displayVisGraph model=
+    div [] [h3 []  [text "Nodes in Visual model"],br [] [],text (toString model.graphAreaModel.nodes),
+        h3[][text "Edges in Visual model"],br [] [],text (toString model.graphAreaModel.edges)
+                       ]
+displayCode:Model->Html Msg
+displayCode model=
+    div [] [Debug.log "print code" (text (Crawl.crawl model.graphAreaModel.graph))]
 wrappedSelector:Model-> Html Msg
 wrappedSelector model =
     App.map SelectorUpdate (Selector.view model.selectorModel)

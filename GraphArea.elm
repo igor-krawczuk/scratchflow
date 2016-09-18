@@ -58,7 +58,7 @@ view model =
 getNodePos nid model=
     case Dict.get nid model.nodes of
         Nothing -> (0,0)
-        Just no-> (no.position.x-model.offset  ,no.position.y )
+        Just no-> (no.position.x,no.position.y )
 
 renderEdge:RealEdge->Model->Svg Msg
 renderEdge e model =
@@ -141,7 +141,7 @@ subscriptions model =
 
 graphAreaStyle:Int -> List(String,String)
 graphAreaStyle offset =[
-    ("margin-left", (toString (offset+5)) ++"px"),
+    ("margin-left", (toString (0+5)) ++"px"),
     ("width","100%"),
     ("height","100%")
     ]
