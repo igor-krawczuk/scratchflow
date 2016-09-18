@@ -2,8 +2,18 @@ module Tree exposing (..)
 
 import Array exposing (Array)
 
-type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
-type TensorType = FloatTensor | IntTensor | NumberTensor | BoolTensor | StringTensor | AnyTensor | NoTensor
+type Tensor = Scalar Float 
+            | Vector (List Float) 
+            | Matrix (List (List Float)) 
+            | Cube (List (List (List Float)))
+
+type TensorType = FloatTensor
+                | IntTensor
+                | NumberTensor
+                | BoolTensor
+                | StringTensor
+                | AnyTensor
+                | NoTensor
 
 type alias Tree = {
     nodes : List Node
@@ -25,13 +35,27 @@ dummyNode = {
     outputs = Array.fromList []
  }
 
-type NodeType = Input String TensorType | Output |
-    Constant Tensor | Variable | Zeros TensorType |
-    Add | Sub | Mul | Div | Mod | Neg | Log |
-    Equal | Argmax Int | Cast TensorType |
-    RandomNormal Float Float | MatMul | SoftMax |
-    ReduceMean | ReduceSum (List Int) |
-    TrainGDOMinimize Float
+type NodeType = Input String TensorType
+              | Output
+              | Constant Tensor
+              | Variable
+              | Zeros TensorType
+              | Add
+              | Sub
+              | Mul
+              | Div
+              | Mod
+              | Neg
+              | Log
+              | Equal
+              | Argmax Int
+              | Cast TensorType
+              | RandomNormal Float Float
+              | MatMul
+              | SoftMax
+              | ReduceMean
+              | ReduceSum (List Int)
+              | TrainGDOMinimize Float
 
 nbInputs : NodeType -> Int
 nbInputs nodeType = Array.length (inputTypes nodeType)
