@@ -86,7 +86,13 @@ displayVisGraph model=
                        ]
 displayCode:Model->Html Msg
 displayCode model=
-    div [] [Debug.log "print code" (text (Crawl.crawl model.graphAreaModel.graph))]
+    div [] (
+        [
+            h3 [] [text "Generated Code"],
+            br[][]
+            ]++(
+            List.map (\c -> p[] [pre [] [text c]]) (Crawl.crawlToList model.graphAreaModel.graph))
+        )
 wrappedSelector:Model-> Html Msg
 wrappedSelector model =
     App.map SelectorUpdate (Selector.view model.selectorModel)

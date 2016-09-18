@@ -1,4 +1,4 @@
-module Crawl exposing (crawl)
+module Crawl exposing (crawl,crawlToList)
 
 import List
 import Array
@@ -19,6 +19,17 @@ crawl tree = let
     in String.concat (List.map (\node ->
             generateCode node tree
         ) outputNodes)
+
+crawlToList : Tree -> List String
+crawlToList tree = let
+    outputNodes = List.filter (\node -> case node.nodeType of 
+        Output -> True
+        _ -> False
+    ) tree.nodes
+    in (List.map (\node ->
+            generateCode node tree
+        ) outputNodes)
+
 
 -- Recursive function going through the tree from the output
 generateCode : Node -> Tree -> String
