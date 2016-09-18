@@ -41,7 +41,6 @@ handleNodeUpdate model gnmsg=
     GraphicalNode.DragStart pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragAt pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragEnd pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
-    GraphicalNode.SetParent par node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
 
 forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
 forwardMsg gnmsg may_node model=
@@ -76,10 +75,3 @@ graphAreaStyle offset =[
     ("width","100%"),
     ("height","100%")
     ]
-
-optionSpawn : Attribute Msg
-optionSpawn =
-  Html.Events.onClick (AddNode makeNode)
-
-makeNode:GraphicalNode.Model
-makeNode=(GraphicalNode.Model (Position 5 10) Nothing  "graphc:" 0)

@@ -12,6 +12,7 @@ import Task
 
 -- IMPORT MYMODULES
 import GraphicalNode
+import Tree
 
 type Msg = ChangeWidth Int
     | SelNodeUpdate GraphicalNode.Msg
@@ -20,7 +21,7 @@ type Msg = ChangeWidth Int
 
 type OutMsg = SendNode GraphicalNode.Model
 
-type alias Option = {text:String, id:Int}
+type alias Option = {text:String, id:Int, nodeType:Tree.NodeType}
 type alias SelNode = Maybe GraphicalNode.Model
 
 type alias Model = {width:Int, options: List Option, selNode:SelNode}
@@ -50,7 +51,7 @@ view : Model -> Html Msg
 view model =
     div [style (selectorStyle model.width)]
     [ul [ style listStyle] (
-        List.map (\o -> li [optionSpawn o.text, style optionstyle] [text o.text] ) model.options),
+        List.map (\o -> li [optionSpawn o.text o.nodeType, style optionstyle] [text o.text] ) model.options),
         renderSelNode model.selNode
         ]
 
@@ -70,7 +71,6 @@ handleSelNode gnmsg model=
         GraphicalNode.DragStart pos id-> forwardMsg gnmsg model
         GraphicalNode.DragAt pos id-> forwardMsg gnmsg model
         GraphicalNode.DragEnd pos id-> forwardMsg gnmsg model
-        GraphicalNode.SetParent par id-> forwardMsg gnmsg model
             
 forwardMsg:GraphicalNode.Msg->Model->(Model,Cmd Msg,Maybe OutMsg)
 forwardMsg gnmsg model=
@@ -94,9 +94,10 @@ checkNodeRelease x y id model =
 
 
 
-optionSpawn :String->Attribute Msg
-optionSpawn text=
-  Html.Events.on "mousedown" (Json.map (\p-> AddNode (GraphicalNode.Model p (Just(GraphicalNode.Drag p p))  text 0)) Mouse.position)
+optionSpawn :String->Tree.NodeType->Attribute Msg
+optionSpawn text nodeType=
+  Html.Events.on "mousedown" (Json.map (\p-> AddNode (
+      GraphicalNode.Model p (Just(GraphicalNode.Drag p p))  text 0 nodeType)) Mouse.position)
 
 
 renderSelNode:SelNode -> Html Msg

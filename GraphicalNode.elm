@@ -7,15 +7,18 @@ import Html.Events exposing (on)
 import Json.Decode as Json exposing ((:=))
 import Mouse exposing (Position)
 import Task
+import Tree
 
 -- MODEL
 
 
 type alias Model =
-    { position : Position,
-     drag : Maybe Drag,
+
+    {   position : Position,
+        drag : Maybe Drag,
         text:String,
-        id:Int
+        id:Int,
+        nodeType:Tree.NodeType
     }
 
 
@@ -33,25 +36,23 @@ type Msg
     = DragStart Position Int
     | DragAt Position Int
     | DragEnd Position Int
-    | SetParent String Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg,Maybe OutMsg )
-update msg ({position, drag,text,id} as model) =
+update msg ({position, drag,text,id, nodeType} as model) =
   let 
       outmsg=case  msg of 
           DragEnd xy id-> let pos=(getPosition model)in Just (ReleasedAt pos.x pos.y id)
           _-> Nothing
       newmodel= case (Debug.log "node msg" msg) of
         DragStart xy id->
-          Model position (Just (Drag xy xy)) text id
+          Model position (Just (Drag xy xy)) text id nodeType
 
         DragAt xy id->
-          Model position (Maybe.map (\{start} -> Drag start xy) drag) text id
+          Model position (Maybe.map (\{start} -> Drag start xy) drag) text id nodeType
 
         DragEnd p id->
-          Model (getPosition model) Nothing text id
-        SetParent p id-> {model|text=p}
+          Model (getPosition model) Nothing text id nodeType
   in (newmodel,Cmd.none,outmsg)
 
 -- SUBSCRIPTIONS
