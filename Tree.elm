@@ -2,18 +2,8 @@ module Tree exposing (..)
 
 import Array exposing (Array)
 
-type Tensor = Scalar Float 
-            | Vector (List Float) 
-            | Matrix (List (List Float)) 
-            | Cube (List (List (List Float)))
-
-type TensorType = FloatTensor
-                | IntTensor
-                | NumberTensor
-                | BoolTensor
-                | StringTensor
-                | AnyTensor
-                | NoTensor
+type Tensor = Scalar Float | Vector (List Float) | Matrix (List (List Float)) | Cube (List (List (List Float)))
+type TensorType = FloatTensor | IntTensor | NumberTensor | BoolTensor | StringTensor | AnyTensor | NoTensor
 
 type alias Tree = {
     nodes : List Node
@@ -125,22 +115,32 @@ compatibleTypes type1 type2 = case type1 of
     NoTensor -> False
     _ -> type2 == type1 || type2 == AnyTensor
 
--- Create an edge between two nodes on designated in/outgoing points
-bindNodes : (Int, Int) -> (Int, Int) -> Tree -> Maybe Tree
-bindNodes (nodeId1, id1) (nodeId2, id2) tree = let
-        node1 = case List.head (List.filter (\x -> x.id == nodeId1) tree.nodes) of
-            Just n1 -> case (Array.get id1 n1.outputs) of
-                Just Nothing -> n1
-                _ -> dummyNode
-            Nothing -> dummyNode
+-- Create an edge between two nodes
+bindNodes : Int -> Int -> Tree -> Maybe Tree
+bindNodes nodeId1 nodeId2 tree = let
+        (node1, id1) = case List.head (List.filter (\x -> x.id == nodeId1) tree.nodes) of
+            Just n1 -> let
+                indexedOutputs = Array.toIndexedList n1.outputs
+                id1 = case List.head (List.filter (\(i, x) -> x == Nothing) indexedOutputs) of
+                    Just (i, x) -> i
+                    Nothing -> -1
+                in case (Array.get id1 n1.outputs) of
+                    Just Nothing -> (n1, id1)
+                    _ -> (dummyNode, id1)
+            Nothing -> (dummyNode, -1)
         node1OutType = case Array.get id1 (outputTypes node1.nodeType) of
             Just type1 -> type1
             Nothing -> NoTensor
-        node2 = case List.head (List.filter (\x -> x.id == nodeId2) tree.nodes) of
-            Just n2 -> case (Array.get id2 n2.inputs) of
-                Just Nothing -> n2
-                _ -> dummyNode
-            Nothing -> dummyNode
+        (node2, id2) = case List.head (List.filter (\x -> x.id == nodeId2) tree.nodes) of
+            Just n2 -> let
+                indexedInputs = Array.toIndexedList n2.inputs
+                id2 = case List.head (List.filter (\(i, x) -> x == Nothing) indexedInputs) of
+                    Just (i, x) -> i
+                    Nothing -> -1
+                in case (Array.get id2 n2.inputs) of
+                Just Nothing -> (n2, id2)
+                _ -> (dummyNode, id2)
+            Nothing -> (dummyNode, -1)
         node2InType = case Array.get id2 (inputTypes node2.nodeType) of
             Just type2 -> type2
             Nothing -> NoTensor
