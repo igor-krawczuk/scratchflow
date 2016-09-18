@@ -63,7 +63,10 @@ checkEdge node_id model=
                            ne={edge|sink=Just node_id}
                            nm={model |newEdge=Just ne} in
                                                   newEdge nm-- add the cas test here, for now just create the edges case Tree.bindNodes
-            Just s -> { model | graph = Tree.bindNodes (edge.source, 0) (s, 0) model.graph } -- TODO change indices
+            Just s -> case Tree.bindNodes (edge.source, 0) (s, 0) model.graph of -- TODO change indices
+                    Just newGraph -> { model | graph = newGraph }
+                    Nothing -> model
+
 
 newEdge:Model->Model
 newEdge model= case model.newEdge of
