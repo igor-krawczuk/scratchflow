@@ -71,6 +71,8 @@ handleSelNode gnmsg model=
         GraphicalNode.DragStart pos id-> forwardMsg gnmsg model
         GraphicalNode.DragAt pos id-> forwardMsg gnmsg model
         GraphicalNode.DragEnd pos id-> forwardMsg gnmsg model
+        GraphicalNode.NoOp -> forwardMsg gnmsg model
+        GraphicalNode.StartEdge id -> forwardMsg gnmsg  model
             
 forwardMsg:GraphicalNode.Msg->Model->(Model,Cmd Msg,Maybe OutMsg)
 forwardMsg gnmsg model=
@@ -80,6 +82,7 @@ forwardMsg gnmsg model=
                                 in 
                                    case gomsg of
                                        Just (GraphicalNode.ReleasedAt x y id) ->checkNodeRelease x y id model
+                                       Just (GraphicalNode.EdgeNode node_id)->(model,Cmd.map SelNodeUpdate slncm, Nothing)
                                        Nothing->({model | selNode = Just newslm},Cmd.map SelNodeUpdate slncm,Nothing)
                     Nothing -> (model,Cmd.none, Nothing ) --check how this couzld happen..
 

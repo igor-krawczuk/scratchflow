@@ -152,12 +152,12 @@ helperGetInit =
     (Model (SubData (Window.Size 0 0 ))
     (
         Selector.Model 
-        0 
+        1 -- start with 1, since 0 is error value
         getOptions
         Nothing
     )
     []
-    (GraphArea.Model Dict.empty 0 0 Tree.newTree)
+    (GraphArea.Model Dict.empty 0 0 Tree.newTree Nothing)
     ,
     Task.perform (\_-> NoOp) winSizeToMsg Window.size)
 

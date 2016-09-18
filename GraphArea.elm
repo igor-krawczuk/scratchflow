@@ -22,7 +22,15 @@ type Msg = AddNode GraphicalNode.Model
 
 type OutMsg = NodeReceived
 
-type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int, graph:Tree.Tree}
+type alias Edge={source:Int,sink: Maybe Int}
+type alias RealEdge={source:Int,sink:Int}
+type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model,
+                   offset:Int,
+                   cur_id:Int,
+                   graph:Tree.Tree,
+                   newEdge:Maybe Edge,
+                   edges:Dict.Dict (Int,Int) RealEdge
+                }
 
 view : Model -> Html Msg
 view model =
@@ -42,6 +50,29 @@ handleNodeUpdate model gnmsg=
     GraphicalNode.DragStart pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragAt pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
     GraphicalNode.DragEnd pos node_id-> forwardMsg gnmsg (Dict.get node_id model.nodes) model
+    GraphicalNode.StartEdge node_id -> let newmodel =checkEdge node_id model in forwardMsg gnmsg (Dict.get node_id model.nodes) newmodel
+    GraphicalNode.NoOp -> forwardMsg gnmsg Nothing model
+
+
+checkEdge:Int->Model->Model
+checkEdge node_id model=
+    case model.newEdge of
+        Nothing->{model|newEdge=Just (Edge node_id Nothing)}
+        Just edge-> case edge.sink of
+            Nothing -> let 
+                           ne={edge|sink=Just node_id}
+                           nm={model |newEdge=Just ne} in
+                                                  newEdge nm-- add the cas test here, for now just create the edges case Tree.bindNodes 
+newEdge:Model->Model
+newEdge model= case model.newEdge of
+    Nothing -> model
+    Just e -> case e.sink of
+        Nothing -> model
+        Just i2 ->let
+                    i1=e.source
+                    olde=model.edges
+        in
+           {model|edges=Dict.insert (i1,i2) (RealEdge i1,i2) olde}
 
 forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
 forwardMsg gnmsg may_node model=
@@ -53,12 +84,14 @@ forwardMsg gnmsg may_node model=
 
 addNode:Model->GraphicalNode.Model->Model
 addNode model nn=
-    let newid=model.id+1 
+    let newid=model.cur_id+1 
+        newtree =Tree.addNode nn.nodeType newid model.graph --if testing later, check with case
+
         pos = GraphicalNode.getPosition nn
-                in 
-    let ni=(Debug.log"grapharea added" {nn|id=newid, position=pos, drag=Nothing}) in
-    let newnodes=(Debug.log "grapharea newdict" (Dict.insert newid ni model.nodes)) in
-            {model|nodes=newnodes,id=newid }
+        ni = {nn|id=newid, position=pos, drag=Nothing}
+        newnodes=(Dict.insert newid ni model.nodes)
+    in
+        (Debug.log "add node to graph" {model|nodes=newnodes,cur_id=newid,graph=newtree })
 
 renderNode:GraphicalNode.Model-> Html Msg
 renderNode node = App.map NodeUpdate (GraphicalNode.view node)

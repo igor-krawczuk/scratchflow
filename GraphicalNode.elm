@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (on)
 
 import Json.Decode as Json exposing ((:=))
+import Json.Decode
 import Mouse exposing (Position)
 import Task
 import Tree
@@ -31,11 +32,14 @@ type alias Drag =
 -- UPDATE
 
 type OutMsg=ReleasedAt Int Int Int
+            |EdgeNode Int
 
 type Msg
     = DragStart Position Int
     | DragAt Position Int
     | DragEnd Position Int
+    |StartEdge Int
+    |NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg,Maybe OutMsg )
@@ -43,8 +47,9 @@ update msg ({position, drag,text,id, nodeType} as model) =
   let 
       outmsg=case  msg of 
           DragEnd xy id-> let pos=(getPosition model)in Just (ReleasedAt pos.x pos.y id)
+          StartEdge id -> Just (EdgeNode id)
           _-> Nothing
-      newmodel= case (Debug.log "node msg" msg) of
+      newmodel= case  msg of
         DragStart xy id->
           Model position (Just (Drag xy xy)) text id nodeType
 
@@ -53,6 +58,8 @@ update msg ({position, drag,text,id, nodeType} as model) =
 
         DragEnd p id->
           Model (getPosition model) Nothing text id nodeType
+        StartEdge id -> model
+        NoOp -> model
   in (newmodel,Cmd.none,outmsg)
 
 -- SUBSCRIPTIONS
@@ -94,8 +101,9 @@ view model =
     in
                div 
                [
-                   onMouseDown model.id
-                   , style
+                   onMouseDown model.id,
+                   onShiftClick model.id,
+                    style
                    [ "background-color" => color--"#3C8D2F"
                    , "cursor" => "move"
 
@@ -137,6 +145,17 @@ getPosition {position, drag} =
 onMouseDown : Int->Attribute Msg
 onMouseDown id =
   on "mousedown" (Json.map (\p->DragStart p id) Mouse.position )
+
+onShiftClick:Int-> Attribute Msg
+onShiftClick id=
+    on "click" (Json.map (\t -> if t then StartEdge id else NoOp) shiftdec_a)
+
+
+
+shiftdec_a=
+    (Json.Decode.at ["shiftKey"] Json.Decode.bool)
+
+
 
 
 ---plan
