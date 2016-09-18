@@ -58,26 +58,19 @@ checkEdge:Int->Model->Model
 checkEdge node_id model=
     case model.newEdge of
         Nothing->{model|newEdge=Just (Edge node_id Nothing)}
-        Just edge-> case edge.sink of
-            Nothing -> let 
-                           ne={edge|sink=Just node_id}
-                           nm={model |newEdge=Just ne} in
-                                                  newEdge nm-- add the cas test here, for now just create the edges case Tree.bindNodes
-            Just s -> case Tree.bindNodes (edge.source, 0) (s, 0) model.graph of -- TODO change indices
-                    Just newGraph -> { model | graph = newGraph }
+        Just edge-> 
+            let s= case edge.sink of
+                    Nothing -> node_Id
+                    Just s ->s
+                in case Tree.bindNodes edge.source s  model.graph of
                     Nothing -> model
+                    Just newGraph -> let es=newEdge (edge.source,s) model.edges in
+                            { model | graph = newGraph,newEdge=Nothing, }
 
 
-newEdge:Model->Model
-newEdge model= case model.newEdge of
-    Nothing -> model
-    Just e -> case e.sink of
-        Nothing -> model
-        Just i2 ->let
-                    i1=e.source
-                    olde=model.edges
-        in
-           {model|edges=Dict.insert (i1,i2) (RealEdge i1 i2) olde}
+newEdge:Dict (Int,Int) RealEdge->(Int,Int)->Dict (Int,Int) RealEdge
+newEdge olde s_to_s =
+    Dict.insert s_to_s edge RealEdge (s_to_s)
 
 forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
 forwardMsg gnmsg may_node model=
