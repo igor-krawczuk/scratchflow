@@ -29,7 +29,7 @@ selectorStyle: Int -> List (String,String)
 selectorStyle width = [
     ("width", (toString width ) ++"px"),
     ("float", "left"),
-    ("background-color","red"),
+    ("background-color","white"),
     ("border-right","thick solid black"),
     ("height","100%")
     ]

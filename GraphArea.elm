@@ -26,7 +26,7 @@ type alias Model= {nodes:Dict.Dict Int GraphicalNode.Model, offset:Int, id:Int}
 view : Model -> Html Msg
 view model =
     div [style (graphAreaStyle model.offset)]
-    ([div[optionSpawn][text "Grapharea"]]++(List.map (\n -> renderNode n) (Dict.values model.nodes)))
+    (List.map (\n -> renderNode n) (Dict.values model.nodes))
 
 update: Msg->Model-> (Model, Cmd Msg, Maybe OutMsg)
 update msg model=

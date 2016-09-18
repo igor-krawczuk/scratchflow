@@ -162,9 +162,7 @@ helperGetInit =
     Task.perform (\_-> NoOp) winSizeToMsg Window.size)
 
 getOptions =
-    [
-        Selector.Option "test" 
-        0]++(List.map (\t ->Selector.Option (toString t) 0) nodeTypes )
+        (List.map (\t ->Selector.Option (toString t) 0) nodeTypes )
 
 tensorTypes=[
       Tree.FloatTensor
