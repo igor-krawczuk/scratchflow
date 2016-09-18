@@ -62,7 +62,9 @@ checkEdge node_id model=
             Nothing -> let 
                            ne={edge|sink=Just node_id}
                            nm={model |newEdge=Just ne} in
-                                                  newEdge nm-- add the cas test here, for now just create the edges case Tree.bindNodes 
+                                                  newEdge nm-- add the cas test here, for now just create the edges case Tree.bindNodes
+            Just s -> { model | graph = Tree.bindNodes (edge.source, 0) (s, 0) model.graph } -- TODO change indices
+
 newEdge:Model->Model
 newEdge model= case model.newEdge of
     Nothing -> model
@@ -72,7 +74,7 @@ newEdge model= case model.newEdge of
                     i1=e.source
                     olde=model.edges
         in
-           {model|edges=Dict.insert (i1,i2) (RealEdge i1,i2) olde}
+           {model|edges=Dict.insert (i1,i2) (RealEdge i1 i2) olde}
 
 forwardMsg:GraphicalNode.Msg->Maybe GraphicalNode.Model->Model->(Model, Cmd Msg, Maybe OutMsg)
 forwardMsg gnmsg may_node model=

@@ -157,7 +157,7 @@ helperGetInit =
         Nothing
     )
     []
-    (GraphArea.Model Dict.empty 0 0 Tree.newTree Nothing)
+    (GraphArea.Model Dict.empty 0 0 Tree.newTree Nothing Dict.empty)
     ,
     Task.perform (\_-> NoOp) winSizeToMsg Window.size)
 
